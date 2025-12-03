@@ -35,4 +35,4 @@ out/
 
 ### VS Code ###
 .vscode/
-D:\sheets_labs&reports\Email-Server\backend\src\main\resources\application.properties
+config/application-personal.properties
