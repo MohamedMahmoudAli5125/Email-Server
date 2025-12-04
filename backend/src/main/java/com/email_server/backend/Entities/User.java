@@ -47,9 +47,6 @@ public class User {
     @Builder.Default
     private List<Contact> contacts = new ArrayList<>();
     
-    // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    // @Builder.Default
-    // private List<EmailFilter> filters = new ArrayList<>();
     
     public void addFolder(Folder folder) {
         folders.add(folder);
@@ -66,8 +63,5 @@ public class User {
         contact.setUser(this);
     }
     
-    // public void addFilter(EmailFilter filter) {
-    //     filters.add(filter);
-    //     filter.setUser(this);
-    // }
+    
 }
