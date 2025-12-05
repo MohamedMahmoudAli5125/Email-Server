@@ -1,4 +1,4 @@
-package Email_server.Backend.Entities;
+package com.email_server.backend.Entities;
 
 
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import Email_server.Backend.enums.FolderType;
+import com.email_server.backend.enums.FolderType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

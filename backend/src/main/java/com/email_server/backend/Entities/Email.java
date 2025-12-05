@@ -1,8 +1,8 @@
-package Email_server.Backend.Entities;
+package com.email_server.backend.Entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import Email_server.Backend.enums.EmailPriority;
+import com.email_server.backend.enums.EmailPriority;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

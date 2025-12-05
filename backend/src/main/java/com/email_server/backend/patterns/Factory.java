@@ -1,8 +1,8 @@
-package Email_server.Backend.patterns;
+package com.email_server.backend.patterns;
 
-import Email_server.Backend.Entities.Folder;
-import Email_server.Backend.enums.FolderType;
-import Email_server.Backend.Entities.User;
+import com.email_server.backend.Entities.Folder;
+import com.email_server.backend.enums.FolderType;
+import com.email_server.backend.Entities.User;
 
 public class Factory {
  public static Folder createFolder(FolderType type, User user) {

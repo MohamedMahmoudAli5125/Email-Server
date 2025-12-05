@@ -1,4 +1,4 @@
-package Email_server.Backend.Dto;
+package com.email_server.backend.Dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package Email_server.Backend.enums;
+package com.email_server.backend.enums;
 
 public enum EmailPriority {
     LOW(1),

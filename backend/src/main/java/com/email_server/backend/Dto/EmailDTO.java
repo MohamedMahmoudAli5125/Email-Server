@@ -1,11 +1,11 @@
-package Email_server.Backend.Dto;
+package com.email_server.backend.Dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
-import Email_server.Backend.enums.EmailPriority;
+import com.email_server.backend.enums.EmailPriority;
 
 import java.util.ArrayList;
 import java.util.List;

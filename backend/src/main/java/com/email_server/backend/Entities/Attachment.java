@@ -1,4 +1,4 @@
-package Email_server.Backend.Entities;
+package com.email_server.backend.Entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

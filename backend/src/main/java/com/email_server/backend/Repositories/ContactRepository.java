@@ -1,4 +1,4 @@
-package Email_server.Backend.Repositories;
+package com.email_server.backend.Repositories;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import Email_server.Backend.Entities.Contact;
+import com.email_server.backend.Entities.Contact;
 
 public interface  ContactRepository extends JpaRepository<String, Contact> {
 

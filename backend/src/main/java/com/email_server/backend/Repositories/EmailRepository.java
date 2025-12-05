@@ -1,4 +1,4 @@
-package Email_server.Backend.Repositories;
+package com.email_server.backend.Repositories;
 
 import java.time.LocalDateTime;
 
@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import Email_server.Backend.Entities.Email;
-import Email_server.Backend.enums.EmailPriority;
+import com.email_server.backend.Entities.Email;
+import com.email_server.backend.enums.EmailPriority;
 
 public interface EmailRepository  extends JpaRepository<String, Email> {
 
