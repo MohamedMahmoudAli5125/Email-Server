@@ -1,0 +1,88 @@
+* {
+    font-family: "Roboto";
+}
+
+.mail-container {
+    position: fixed;
+    background-color: white;
+    top: 120px;
+    bottom: 20px;
+    right: 20px;
+    width: 1050px;
+    border-radius: 20px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
+    overflow-y: scroll;
+}
+
+.options-bar {
+    background-color: white;
+    display: flex;
+    position: fixed;
+    align-items: center;
+    justify-content: space-between;
+    width: 78%;
+    height: 25px;
+    padding: 10px;
+    border-radius: 30px;
+}
+
+.pagination {
+    font-size: small;
+}
+
+.arrows {
+    display: flex;
+    align-items: center;
+}
+
+.arrow {
+    font-size: xx-large;
+    user-select: none;
+    cursor: pointer;
+}
+
+.arrow-right {
+    margin-left: 25px;
+}
+
+.arrow-left {
+    margin-left: 20px;
+}
+
+.options-right-section {
+    display: flex;
+    align-items: center;
+}
+
+.mail-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+}
+
+.mail-box {
+    overflow-y: scroll;
+}
+
+.mail {
+    width: 95%;
+    display: flex;
+    flex: 1 1 3 4 5;
+}
+
+.mail-select {
+    flex: 1 1 0;
+}
+
+.mail-star {
+    flex: 1 1 0;
+}
+
+.mail-sender {
+    flex: 4 3 0;
+}
+
+.mail-body {
+    flex: 5 4 0;
+}

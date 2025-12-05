@@ -5,7 +5,12 @@ import { RouterOutlet } from '@angular/router';
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: [
+    '../assets/css/nav-bar.css',
+    '../assets/css/mail.css',
+    '../assets/css/side-bar.css',
+    'app.css'
+  ]
 })
 export class App {
   protected readonly title = signal('app');
