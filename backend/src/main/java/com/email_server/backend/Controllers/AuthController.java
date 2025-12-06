@@ -1,147 +1,83 @@
-// AuthController.java
-package com.email_server.backend.Controllers;
+package Email_server.Backend.Controller;
 
-import com.email_server.backend.Dto.UserDTO;
-import com.email_server.backend.Entities.User;
-import com.email_server.backend.Services.UserService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import Email_server.Backend.Dto.UserDTO;
+import Email_server.Backend.Entities.User;
+import Email_server.Backend.services.UserService;
 @RestController
-@RequestMapping("/api/auth")
-public class AuthController {
+@CrossOrigin("*")
+@RequestMapping("/api/users")
 
+public class UserController {
+   
+    
     private final UserService userService;
-
-    public AuthController(UserService userService) {
+    
+    public UserController(UserService userService) {
         this.userService = userService;
     }
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
-        // Bean Validation errors from DTO annotations
-        if (result.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            result.getFieldErrors().forEach(error ->
-                    errors.put(error.getField(), error.getDefaultMessage()));
-            return ResponseEntity.badRequest().body(errors);
-        }
-
+    // i return user as you need its id i return password not very important now
+    @PostMapping("/register")
+    public ResponseEntity<?> register( @RequestBody UserDTO userDTO) {
         try {
-            User user = userService.signup(userDTO);
-            // Return only necessary fields
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "User registered successfully");
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
+            User user = userService.registerUser(userDTO);
+           
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
+    // still i return user to his id 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+    public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
         try {
-            String email = credentials.get("email");
-            String password = credentials.get("password");
-
-            if (email == null || password == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Email and password are required"));
-            }
-
-            User user = userService.login(email, password);
-
-            // Return user info without password
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "Login successful");
-
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
+          
+            
+            User user = userService.login(userDTO.getEmail(),userDTO.getPassword());
+            
+        
+            
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", e.getMessage()));
         }
     }
-    // Add these 3 endpoints to your existing AuthController.java
-
-    // 1. GET Profile
-    @GetMapping("/profile/{userId}")
-    public ResponseEntity<?> getProfile(@PathVariable String userId) {
+    
+    // from here we not need as this will be overhead 
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserById(@PathVariable String userId) {
         try {
             User user = userService.getUserById(userId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "Profile retrieved successfully");
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
-
-    // 2. UPDATE Profile
-    @PutMapping("/profile/{userId}")
-    public ResponseEntity<?> updateProfile(
-            @PathVariable String userId,
-            @RequestBody Map<String, String> updateData) {  // Using Map for flexibility
-
+    
+    @PutMapping("/{userId}")
+    public ResponseEntity<?> updateUser(@PathVariable String userId, 
+                                      @RequestBody UserDTO userDTO) {
         try {
-            // Create a UserDTO from the update data
-            UserDTO updateDTO = new UserDTO();
-
-            // Only set fields that are provided (partial update)
-            if (updateData.containsKey("name")) {
-                updateDTO.setName(updateData.get("name"));
-            }
-            if (updateData.containsKey("password")) {
-                updateDTO.setPassword(updateData.get("password"));
-            }
-            // Email cannot be updated, so ignore if provided
-
-            User user = userService.updateUser(userId, updateDTO);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "Profile updated successfully");
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+            User user = userService.updateUser(userId, userDTO);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
-    // 3. DELETE Profile
-    @DeleteMapping("/profile/{userId}")
-    public ResponseEntity<?> deleteAccount(@PathVariable String userId) {
-        try {
-            userService.deleteUser(userId);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Account deleted successfully"
-            ));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
+    
+  
 }
+
