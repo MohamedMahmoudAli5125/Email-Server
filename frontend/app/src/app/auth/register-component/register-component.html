@@ -1,0 +1,13 @@
+<body>
+    <div class="main">
+        <form class="login-form" (ngSubmit)="register()" action="">
+            <p class="input-title">Email:</p>
+            <input class="email" [(ngModel)]="email" type="text" name="email">
+            <p class="input-title">Username:</p>
+            <input class="email" [(ngModel)]="username" type="text" name="username">
+            <p class="input-title">Password:</p>
+            <input class="password" [(ngModel)]="password" type="text" name="password">
+            <button type="submit">Register</button>
+        </form>
+    </div>
+</body>

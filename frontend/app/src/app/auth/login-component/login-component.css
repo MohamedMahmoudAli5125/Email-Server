@@ -1,0 +1,43 @@
+body {
+    background-color: #6969fa;
+    display: flex;
+    height: 85vh;
+    width: auto;
+    align-items: center;
+    justify-content: center;
+}
+
+.main {
+    display: flex;
+    border-radius: 20px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.6);
+    height: 450px;
+    width: 350px;
+    background-color: white;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-form {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+}
+
+.input-title {
+    margin-right: auto;
+    margin-bottom: 5px;
+}
+
+.email, .password {
+    height: 22px;
+    width: 200px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: solid black;
+    border-width: 0 0 2px 0;
+    outline: none;
+}
