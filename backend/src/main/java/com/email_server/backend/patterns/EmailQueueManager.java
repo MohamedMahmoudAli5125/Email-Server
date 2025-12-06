@@ -1,9 +1,11 @@
-package Email_server.Backend.patterns;
+package com.email_server.backend.patterns;
+
+import com.email_server.backend.Entities.Email;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import Email_server.Backend.Entities.Email;
+
 // why this pattern 
 // this to make all send operation which my programe make in single queue 
 // this for two 
