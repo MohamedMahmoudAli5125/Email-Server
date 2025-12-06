@@ -1,4 +1,4 @@
-package Email_server.Backend.services;
+package com.email_server.backend.services;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
@@ -12,16 +12,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Email_server.Backend.Dto.EmailDTO;
-import Email_server.Backend.Entities.Attachment;
-import Email_server.Backend.Entities.Email;
-import Email_server.Backend.Entities.Folder;
-import Email_server.Backend.Entities.User;
-import Email_server.Backend.Repositories.EmailRepository;
-import Email_server.Backend.Repositories.UserRepository;
-import Email_server.Backend.enums.EmailPriority;
-import Email_server.Backend.enums.FolderType;
-import Email_server.Backend.patterns.EmailQueueManager;
+import com.email_server.backend.Dto.EmailDTO;
+import com.email_server.backend.Entities.Attachment;
+import com.email_server.backend.Entities.Email;
+import com.email_server.backend.Entities.Folder;
+import com.email_server.backend.Entities.User;
+import com.email_server.backend.Repositories.EmailRepository;
+import com.email_server.backend.Repositories.UserRepository;
+import com.email_server.backend.enums.EmailPriority;
+import com.email_server.backend.enums.FolderType;
+
+
+
 
 @Service
 public class EmailService {
