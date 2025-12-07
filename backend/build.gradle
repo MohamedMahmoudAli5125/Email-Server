@@ -4,28 +4,45 @@ plugins {
     id 'java'
 }
 
+group = 'com.email_server'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17) // Ensures you are using Java 17
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
 dependencies {
-    // Spring
+    // 1. Web & Security
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Database
-    implementation 'org.postgresql:postgresql:42.7.3'
+    // 2. Database (JPA + Postgres)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
 
-    // Lombok
+    // 3. Lombok (The Fix)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // DevTools
+    // 4. Tools & Test
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
 
+tasks.named('test') {
+    useJUnitPlatform()
 }

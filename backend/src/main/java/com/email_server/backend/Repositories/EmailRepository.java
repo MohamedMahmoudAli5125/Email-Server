@@ -46,15 +46,15 @@ Page<Email> findByFolderIdAndIsReadFalse(String folderId, Pageable pageable);
 //    Page<Email> searchBySubject(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 //
 //    // Search by sender
-    @Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND LOWER(e.fromEmail) LIKE LOWER(CONCAT('%', :sender, '%'))")
-    Page<Email> searchBySender(@Param("folderId") String folderId, @Param("formEmail") String sender, Pageable pageable);
+@Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND LOWER(e.fromEmail) LIKE LOWER(CONCAT('%', :sender, '%'))")
+Page<Email> searchBySender(@Param("folderId") String folderId, @Param("sender") String sender, Pageable pageable);
 
     // Search by body
     @Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND LOWER(e.body) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Email> searchByBody(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 
     // Search by just attachment
-     @Query("SELECT e FROM Email e   Join e.attachments b      WHERE e.folder.id = :folderId AND LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @Query("SELECT e FROM Email e Join e.attachments b WHERE e.folder.id = :folderId AND LOWER(b.fileName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Email> searchByAttachment(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 
 
@@ -64,8 +64,8 @@ Page<Email> findByFolderIdAndIsReadFalse(String folderId, Pageable pageable);
 @Query("SELECT e FROM Email e  Join e.attachments b    WHERE e.folder.id = :folderId And "+
 " LOWER(e.body) LIKE LOWER (CONCAT('%',:keyword,'%') ) OR  "+
 "LOWER(e.subject) LIKE LOWER (CONCAT('%',:keyword,'%') ) OR "+
-"LOWER(e.sender) LIKE LOWER (CONCAT('%',:keyword,'%') )  OR "+
-" LOWER(b.name) LIKE LOWER (CONCAT('%',:keyword,'%') )   "
+"LOWER(e.fromEmail) LIKE LOWER (CONCAT('%',:keyword,'%') )  OR "+
+" LOWER(b.fileName) LIKE LOWER (CONCAT('%',:keyword,'%') )   "
 )
     Page<Email> searchByAll(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 
