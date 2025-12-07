@@ -34,12 +34,7 @@ public class ContactController {
         List<Contact> contacts = contactService.getUserContacts(userId);
         return ResponseEntity.ok(contacts);
     }
-    
-    // @GetMapping("/user/{userId}/sorted")
-    // public ResponseEntity<List<Contact>> getUserContactsSorted(@PathVariable String userId) {
-    //     List<Contact> contacts = contactService.getUserContactsSorted(userId);
-    //     return ResponseEntity.ok(contacts);
-    // }
+
     
     @GetMapping("/{contactId}")
     public ResponseEntity<?> getContactById(@PathVariable String contactId) {
@@ -51,19 +46,7 @@ public class ContactController {
         }
     }
     
-    // @GetMapping("/user/{userId}/search/name")
-    // public ResponseEntity<List<Contact>> searchByName(@PathVariable String userId,
-    //                                                   @RequestParam String keyword) {
-    //     List<Contact> contacts = contactService.searchContactsByName(userId, keyword);
-    //     return ResponseEntity.ok(contacts);
-    // }
     
-    // @GetMapping("/user/{userId}/search/email")
-    // public ResponseEntity<List<Contact>> searchByEmail(@PathVariable String userId,
-    //                                                    @RequestParam String email) {
-    //     List<Contact> contacts = contactService.searchContactsByEmail(userId, email);
-    //     return ResponseEntity.ok(contacts);
-    // }
     
     @PostMapping("/user/{userId}")
     public ResponseEntity<?> createContact(@PathVariable String userId,
