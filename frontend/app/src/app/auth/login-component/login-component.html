@@ -1,11 +1,28 @@
-<body>
-    <div class="main">
-        <form class="login-form" (ngSubmit)="login()" action="">
-            <p class="input-title">Email:</p>
-            <input class="email" [(ngModel)]="email" type="text" name="email">
-            <p class="input-title">Password:</p>
-            <input class="password" [(ngModel)]="password" type="text" name="password">
-            <button type="submit">Login</button>
-        </form>
-    </div>
-</body>
+<div class="wrapper">
+    <div class="card-switch">
+        <label class="switch">
+           <input type="checkbox" class="toggle" id="authToggle">
+           <span class="slider"></span>
+           <span class="card-side"></span>
+           <div class="flip-card__inner">
+              <div class="flip-card__front">
+                 <div class="title">Log in</div>
+                 <form class="flip-card__form" (ngSubmit)="login()" action="">
+                    <input class="flip-card__input" [(ngModel)]="email" name="email" placeholder="Email" type="email">
+                    <input class="flip-card__input" [(ngModel)]="password" name="password" placeholder="Password" type="password">
+                    <button class="flip-card__btn" type="submit">Let's go!</button>
+                 </form>
+              </div>
+              <div class="flip-card__back">
+                 <div class="title">Sign up</div>
+                 <form class="flip-card__form" action="">
+                    <input class="flip-card__input" placeholder="Username" type="text">
+                    <input class="flip-card__input" placeholder="Email" type="email">
+                    <input class="flip-card__input" placeholder="Password" type="password">
+                    <button class="flip-card__btn" type="button" (click)="navigateToRegister()">Confirm!</button>
+                 </form>
+              </div>
+           </div>
+        </label>
+    </div>   
+</div>

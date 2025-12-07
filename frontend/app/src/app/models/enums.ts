@@ -1,5 +1,6 @@
 export enum EmailPriority {
   LOW = 'LOW',
   NORMAL = 'NORMAL',
-  HIGH = 'HIGH'
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
 }

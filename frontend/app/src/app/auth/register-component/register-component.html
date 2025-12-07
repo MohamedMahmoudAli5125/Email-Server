@@ -1,13 +1,29 @@
-<body>
-    <div class="main">
-        <form class="login-form" (ngSubmit)="register()" action="">
-            <p class="input-title">Email:</p>
-            <input class="email" [(ngModel)]="email" type="text" name="email">
-            <p class="input-title">Username:</p>
-            <input class="email" [(ngModel)]="username" type="text" name="username">
-            <p class="input-title">Password:</p>
-            <input class="password" [(ngModel)]="password" type="text" name="password">
-            <button type="submit">Register</button>
-        </form>
-    </div>
-</body>
+<!-- Remove <body> tag, just keep the wrapper -->
+<div class="wrapper">
+    <div class="card-switch">
+        <label class="switch">
+           <input type="checkbox" class="toggle" id="authToggle" checked>
+           <span class="slider"></span>
+           <span class="card-side"></span>
+           <div class="flip-card__inner">
+              <div class="flip-card__front">
+                 <div class="title">Log in</div>
+                 <form class="flip-card__form" action="">
+                    <input class="flip-card__input" placeholder="Email" type="email">
+                    <input class="flip-card__input" placeholder="Password" type="password">
+                    <button class="flip-card__btn" type="button" (click)="navigateToLogin()">Let's go!</button>
+                 </form>
+              </div>
+              <div class="flip-card__back">
+                 <div class="title">Sign up</div>
+                 <form class="flip-card__form" (ngSubmit)="register()" action="">
+                    <input class="flip-card__input" [(ngModel)]="username" name="username" placeholder="Username" type="text">
+                    <input class="flip-card__input" [(ngModel)]="email" name="email" placeholder="Email" type="email">
+                    <input class="flip-card__input" [(ngModel)]="password" name="password" placeholder="Password" type="password">
+                    <button class="flip-card__btn" type="submit">Confirm!</button>
+                 </form>
+              </div>
+           </div>
+        </label>
+    </div>   
+</div>
