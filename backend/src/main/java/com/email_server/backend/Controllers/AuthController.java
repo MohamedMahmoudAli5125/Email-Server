@@ -27,6 +27,7 @@ public class AuthController {
     public ResponseEntity<?> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
         // Bean Validation errors from DTO annotations
         if (result.hasErrors()) {
+            System.out.println("has errors");
             Map<String, String> errors = new HashMap<>();
             result.getFieldErrors().forEach(error ->
                     errors.put(error.getField(), error.getDefaultMessage()));
@@ -36,11 +37,7 @@ public class AuthController {
         try {
             User user = userService.signup(userDTO);
             // Return only necessary fields
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "User registered successfully");
+            UserDTO response = new UserDTO(user);
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -62,11 +59,7 @@ public class AuthController {
             User user = userService.login(email, password);
 
             // Return user info without password
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "Login successful");
+            UserDTO response = new UserDTO(user);
 
             return ResponseEntity.ok(response);
 

@@ -3,6 +3,7 @@ import { MailBox } from './mail/mail-box/mail-box';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { RegisterComponent } from './auth/register-component/register-component';
 import { LoginComponent } from './auth/login-component/login-component';
+import { App } from './app';
 
 export const routes: Routes = [
     // {path: 'inbox', component: MainLayout},
@@ -12,7 +13,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: '**' , redirectTo: 'login' },
+    { path: 'app', component: MainLayout }
 
     // {path: 'register', component: RegisterComponent},
 ];

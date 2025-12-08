@@ -1,15 +1,16 @@
-// we not handle any sort  ans strategy this sort not notice for what 
+package com.email_server.backend.Controllers;
+
+// we not handle any sort  ans strategy this sort not notice for what
 // we not handle get by priority just date 
 // we not handle any filter for search
 // we not handle any singlton like i want 
 
-
-
-package Email_server.Backend.Controller;
-
 import java.util.List;
 import java.util.Map;
 
+import com.email_server.backend.Dto.EmailDTO;
+import com.email_server.backend.Entities.Email;
+import com.email_server.backend.services.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import Email_server.Backend.Dto.EmailDTO;
-import Email_server.Backend.Entities.Email;
-import Email_server.Backend.services.EmailService;
+
 import jakarta.validation.Valid;
 
 @RestController

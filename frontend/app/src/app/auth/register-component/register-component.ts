@@ -25,6 +25,7 @@ export class RegisterComponent {
     }
 
     const user: User = { 
+      id: 0,
       email: this.email,
       name: this.username,
       password: this.password  

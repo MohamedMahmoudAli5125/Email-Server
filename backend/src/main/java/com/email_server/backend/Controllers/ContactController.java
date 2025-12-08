@@ -1,7 +1,10 @@
-package Email_server.Backend.Controller;
+package com.email_server.backend.Controllers;
 import java.util.List;
 import java.util.Map;
 
+import com.email_server.backend.Dto.ContactDTO;
+import com.email_server.backend.Entities.Contact;
+import com.email_server.backend.services.ContactService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,16 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import Email_server.Backend.Dto.ContactDTO;
-import Email_server.Backend.Entities.Contact;
-import Email_server.Backend.services.ContactService;
+
 
 @RestController
 @RequestMapping("/api/contacts")
 @CrossOrigin(origins = "*")
 public class ContactController {
     
-    private  ContactService contactService;
+    private ContactService contactService;
     
     public ContactController(ContactService contactService) {
         this.contactService = contactService;

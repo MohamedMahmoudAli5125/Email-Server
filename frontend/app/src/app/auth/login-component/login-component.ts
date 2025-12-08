@@ -40,8 +40,7 @@ export class LoginComponent {
         
         alert('Login Successful!');
         
-        
-        console.log('User logged in:', response);
+        this.router.navigate(['/app']);
       },
       error: (error) => {
         console.error('Login failed', error);
