@@ -1,9 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { SideBar } from "./shared/side-bar/side-bar";
 import { MailBox } from "./mail/mail-box/mail-box";
 import { NavBar } from "./shared/nav-bar/nav-bar";
 import { NgModel } from '@angular/forms';
+import { AuthService } from './auth/auth.service';
 
 @Component({
   selector: 'app-root',

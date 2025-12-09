@@ -3,6 +3,9 @@ package com.email_server.backend.Controllers;
 import java.util.List;
 import java.util.Map;
 
+import com.email_server.backend.Dto.FolderDTO;
+import com.email_server.backend.Entities.Folder;
+import com.email_server.backend.services.FolderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,9 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.email_server.backend.Dto.FolderDTO;
-import com.email_server.backend.Entities.Folder;
-import com.email_server.backend.Services.FolderService;
+
 
 @RestController
 @RequestMapping("/api/folders")
