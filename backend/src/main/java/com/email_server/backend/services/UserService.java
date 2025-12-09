@@ -87,6 +87,7 @@ package com.email_server.backend.Services;
 import com.email_server.backend.Dto.UserDTO;
 import com.email_server.backend.Entities.User;
 import com.email_server.backend.Repositories.UserRepository;
+import com.email_server.backend.patterns.Factory;
 import com.email_server.backend.validation.ValidationChain;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -122,6 +123,7 @@ public class UserService {
                 .name(userDTO.getName().trim())
                 .password(hashedPassword) // TODO: Hash password!
                 .build();
+        Factory.createDefaultFolders(user);
 
         try {
             return userRepository.save(user);
