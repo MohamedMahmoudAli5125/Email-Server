@@ -1,10 +1,16 @@
-package Email_server.Backend.services;
+package com.email_server.backend.Services;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import com.email_server.backend.Dto.EmailFilterDTO;
+import com.email_server.backend.Repositories.FolderRepository;
+import com.email_server.backend.patterns.EmailQueueManager;
+import com.email_server.backend.patterns.criteria.Criteria;
+import com.email_server.backend.patterns.criteria.CriteriaFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,16 +18,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Email_server.Backend.Dto.EmailDTO;
-import Email_server.Backend.Entities.Attachment;
-import Email_server.Backend.Entities.Email;
-import Email_server.Backend.Entities.Folder;
-import Email_server.Backend.Entities.User;
-import Email_server.Backend.Repositories.EmailRepository;
-import Email_server.Backend.Repositories.UserRepository;
-import Email_server.Backend.enums.EmailPriority;
-import Email_server.Backend.enums.FolderType;
-import Email_server.Backend.patterns.EmailQueueManager;
+import com.email_server.backend.Dto.EmailDTO;
+import com.email_server.backend.Entities.Attachment;
+import com.email_server.backend.Entities.Email;
+import com.email_server.backend.Entities.Folder;
+import com.email_server.backend.Entities.User;
+import com.email_server.backend.Repositories.EmailRepository;
+import com.email_server.backend.Repositories.UserRepository;
+import com.email_server.backend.enums.EmailPriority;
+import com.email_server.backend.enums.FolderType;
+import com.email_server.backend.Services.EmailFilterService;
+import org.springframework.web.multipart.MultipartFile;
+import com.email_server.backend.Repositories.FolderRepository;
 
 @Service
 public class EmailService {
@@ -33,19 +41,26 @@ public class EmailService {
     private final AttachmentService attachmentService;
     private final UserRepository userRepository;
     private final EmailQueueManager queueManager;
-    
+    private final EmailFilterService emailFilterService ;
+    private final FolderRepository folderRepository; // Make sure you have this
+
+
     public EmailService(EmailRepository emailRepository,
                        FolderService folderService,
                        AttachmentService attachmentService,
-                       UserRepository userRepository
+                       UserRepository userRepository,
+                        EmailFilterService emailFilterService,
+                        FolderRepository folderRepository
                        
                       ) {
         this.emailRepository = emailRepository;
         this.folderService = folderService;
         this.attachmentService = attachmentService;
         this.userRepository = userRepository;
-      
         this.queueManager = EmailQueueManager.getInstance();
+        this.emailFilterService = emailFilterService;
+        this.folderRepository = folderRepository;
+
     }
 
 
@@ -72,7 +87,7 @@ public class EmailService {
 
         // Build email using Builder Pattern
         Email email = Email.builder()
-                .fromEmail(emailDTO.getFrom())
+                .fromEmail(emailDTO.getFromEmail())
                 .toList(emailDTO.getTo())
                 .subject(emailDTO.getSubject())
                 .body(emailDTO.getBody())
@@ -166,7 +181,7 @@ while(!allRecipients.isEmpty()){
         List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
         
         Email draft = Email.builder()
-                .fromEmail(emailDTO.getFrom())
+                .fromEmail(emailDTO.getFromEmail())
                 .toList(emailDTO.getTo())
                 // .cc(emailDTO.getCc() != null ? emailDTO.getCc() : new ArrayList<>())
                 .subject(emailDTO.getSubject())
@@ -306,27 +321,115 @@ while(!allRecipients.isEmpty()){
         return emailRepository.countByFolderIdAndIsReadFalse(folderId);
     }
 
+    public List<Email> searchEmailsWithCriteria(String folderId, String keyword,
+                                                int page, int size,
+                                                String sortBy, String sortDirection) {
+        // Fetch all emails from folder
+        List<Email> allEmails = emailRepository.findByFolderId(
+                folderId,
+                Pageable.unpaged()
+        ).getContent();
 
+        // Apply search using Criteria Pattern
+        List<Email> filtered = emailFilterService.searchEmails(allEmails, keyword);
 
+        // Sort
+        EmailFilterDTO dto = EmailFilterDTO.builder()
+                .sortBy(sortBy)
+                .sortDirection(sortDirection)
+                .build();
+        filtered = emailFilterService.sortEmails(filtered, sortBy, sortDirection);
 
+        // Paginate
+        return emailFilterService.paginate(filtered, page, size);
+    }
 
+    public List<Email> filterEmailsWithCriteria(String folderId, EmailFilterDTO filterDTO) {
+        // Fetch all emails from folder
+        List<Email> allEmails = emailRepository.findByFolderId(
+                folderId,
+                Pageable.unpaged()
+        ).getContent();
 
+        // Apply filters using Criteria Pattern
+        List<Email> filtered = emailFilterService.filterEmails(allEmails, filterDTO);
 
+        // Paginate
+        return emailFilterService.paginate(filtered, filterDTO.getPage(), filterDTO.getSize());
+    }
 
+    public List<Email> searchAndFilterWithCriteria(String folderId, EmailFilterDTO filterDTO) {
+        // Fetch all emails from folder
+        List<Email> allEmails = emailRepository.findByFolderId(
+                folderId,
+                Pageable.unpaged()
+        ).getContent();
 
+        // Apply search and filters using Criteria Pattern
+        List<Email> filtered = emailFilterService.searchAndFilter(allEmails, filterDTO);
 
+        // Paginate
+        return emailFilterService.paginate(filtered, filterDTO.getPage(), filterDTO.getSize());
+    }
 
+    public List<Email> complexFilterExample(String folderId) {
+        List<Email> allEmails = emailRepository.findByFolderId(
+                folderId,
+                Pageable.unpaged()
+        ).getContent();
 
+        // Build complex criteria
+        Criteria fromCriteria = CriteriaFactory.createFromCriteria("john");
+        Criteria hasAttachments = CriteriaFactory.createHasAttachmentsCriteria(true);
+        Criteria unreadCriteria = CriteriaFactory.createReadCriteria(false);
 
+        // Combine with AND logic
+        Criteria combined = CriteriaFactory.createAndCriteria(fromCriteria, hasAttachments);
+        combined = CriteriaFactory.createAndCriteria(combined, unreadCriteria);
 
+        // Apply filters
+        return combined.meetCriteria(allEmails);
+    }
 
+    public Email addEmailToFolder(String folderId, EmailDTO emailDTO) {
+        // 1. Find the folder
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Folder not found"));
+        System.out.println("DEBUG: addEmailToFolder called");
+        System.out.println("DEBUG: Folder ID: " + folderId);
+        System.out.println("DEBUG: EmailDTO fromEmail: " + emailDTO.getFromEmail());
+        System.out.println("DEBUG: EmailDTO subject: " + emailDTO.getSubject());
+        System.out.println("DEBUG: EmailDTO to: " + emailDTO.getTo());
 
+        // 2. Convert DTO to Email entity
+        Email email = new Email();
+        email.setFromEmail(emailDTO.getFromEmail());
+        email.setToList(emailDTO.getTo());
+        email.setSubject(emailDTO.getSubject());
+        email.setBody(emailDTO.getBody());
+        email.setPriority(emailDTO.getPriority());
+        email.setFolder(folder);
+        email.setSentDate(LocalDateTime.now());
+        email.setRead(false);
+        email.setImportant(false);
 
+        // 3. Handle attachments if needed
+        if (emailDTO.getAttachmentFiles() != null && !emailDTO.getAttachmentFiles().isEmpty()) {
+            List<Attachment> attachments = new ArrayList<>();
+            for (MultipartFile file : emailDTO.getAttachmentFiles()) {
+                Attachment attachment = new Attachment();
+                attachment.setFileName(file.getOriginalFilename());
+                attachment.setFileType(file.getContentType());
+                attachment.setFileSize(file.getSize());
+                // You might want to save the file content to storage
+                attachments.add(attachment);
+            }
+            email.setAttachments(attachments);
+        }
 
-
-
-
-
+        // 4. Save and return
+        return emailRepository.save(email);
+    }
 
 
 
