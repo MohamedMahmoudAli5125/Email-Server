@@ -1,4 +1,4 @@
-package com.email_server.backend.services;
+package com.email_server.backend.Services;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ import com.email_server.backend.Dto.ContactDTO;
 import com.email_server.backend.Entities.Contact;
 import com.email_server.backend.Entities.User;
 import com.email_server.backend.Repositories.ContactRepository;
+import com.email_server.backend.Services.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
