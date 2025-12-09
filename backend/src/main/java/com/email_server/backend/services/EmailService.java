@@ -162,18 +162,21 @@ while(!allRecipients.isEmpty()){
     }
     
     private Email copyEmail(Email original) {
+         List<Attachment> copiedAttachments = original.getAttachments() != null 
+        ? new ArrayList<>(original.getAttachments()) 
+        : new ArrayList<>();
         return  Email.builder()
                  .fromEmail(original.getFromEmail())
-                .toList(original.getToList())
+                .toList(new ArrayList<>(original.getToList()))
                 // .cc(original.getCcList())
                 // .bcc(original.getBccList())
                 .subject(original.getSubject())
                 .body(original.getBody())
                 .priority(original.getPriority())
                 .sentDate(original.getSentDate())
+                .attachments(copiedAttachments)
                 .build();
     }
-
 
 
  @Transactional
@@ -459,3 +462,4 @@ while(!allRecipients.isEmpty()){
 
     
 }
+
