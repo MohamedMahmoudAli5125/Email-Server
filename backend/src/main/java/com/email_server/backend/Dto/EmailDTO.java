@@ -14,7 +14,7 @@ import java.util.List;
 public class EmailDTO {
     
     @NotBlank(message = "Sender email is required")
-    private String from;
+    private String fromEmail;
     
     @NotEmpty(message = "At least one recipient is required")
     private List<String> to = new ArrayList<>();

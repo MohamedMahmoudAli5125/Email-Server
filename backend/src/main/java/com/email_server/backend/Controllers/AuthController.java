@@ -3,7 +3,7 @@ package com.email_server.backend.Controllers;
 
 import com.email_server.backend.Dto.UserDTO;
 import com.email_server.backend.Entities.User;
-import com.email_server.backend.services.UserService;
+import com.email_server.backend.Services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

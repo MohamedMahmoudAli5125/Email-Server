@@ -82,7 +82,7 @@
 //    // }
 //}
 // UserService.java
-package com.email_server.backend.services;
+package com.email_server.backend.Services;
 
 import com.email_server.backend.Dto.UserDTO;
 import com.email_server.backend.Entities.User;

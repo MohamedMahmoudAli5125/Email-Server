@@ -1,4 +1,4 @@
-package com.email_server.backend.services;
+package com.email_server.backend.Services;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import com.email_server.backend.Entities.User;
 import com.email_server.backend.Repositories.FolderRepository;
 import com.email_server.backend.enums.FolderType;
 import com.email_server.backend.patterns.Factory;
-import com.email_server.backend.services.UserService;
+import com.email_server.backend.Services.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,4 +1,4 @@
-package com.email_server.backend.services;
+package com.email_server.backend.Services;
 
 import java.io.File;
 import java.io.IOException;

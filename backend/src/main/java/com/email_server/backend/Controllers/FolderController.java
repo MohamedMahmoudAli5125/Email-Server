@@ -1,4 +1,4 @@
-package Email_server.Backend.Controller;
+package com.email_server.backend.Controllers;
 
 import java.util.List;
 import java.util.Map;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import Email_server.Backend.Dto.FolderDTO;
-import Email_server.Backend.Entities.Folder;
-import Email_server.Backend.services.FolderService;
+import com.email_server.backend.Dto.FolderDTO;
+import com.email_server.backend.Entities.Folder;
+import com.email_server.backend.Services.FolderService;
 
 @RestController
 @RequestMapping("/api/folders")
