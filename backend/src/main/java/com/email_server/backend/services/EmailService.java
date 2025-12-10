@@ -1,4 +1,4 @@
-package com.email_server.backend.services;
+package com.email_server.backend.Services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class EmailService {
     private final EmailRepository emailRepository;
     private final FolderService folderService;
     private final UserRepository userRepository;
-    private final AttachmentService attachmentService ;
+    private final com.email_server.backend.services.AttachmentService attachmentService ;
     private final EmailQueueManager queueManager;
     private final EmailFilterService emailFilterService ;
     private final FolderRepository folderRepository; // Make sure you have this
@@ -48,7 +48,7 @@ public class EmailService {
 
     public EmailService(EmailRepository emailRepository,
                        FolderService folderService,
-                       AttachmentService attachmentService,
+                       com.email_server.backend.services.AttachmentService attachmentService,
                        UserRepository userRepository,
                         EmailFilterService emailFilterService,
                         FolderRepository folderRepository

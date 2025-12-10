@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.email_server.backend.Dto.EmailDTO;
+import com.email_server.backend.Dto.EmailFilterDTO;
 import com.email_server.backend.Entities.Email;
-import com.email_server.backend.services.EmailService;
+import com.email_server.backend.Services.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -195,5 +196,51 @@ import jakarta.validation.Valid;
     public ResponseEntity<Map<String, Long>> getUnreadCount(@PathVariable String folderId) {
         long count = emailService.getUnreadCount(folderId);
         return ResponseEntity.ok(Map.of("unreadCount", count));
+    }
+
+    // Search , Filter end points and a temp way to add (any emails bodies (without any validation stages) for testing purposes
+//serch (from , to , subject , filename(need some fixes) and body
+    @GetMapping("/folder/{folderId}/search-criteria")
+    public ResponseEntity<List<Email>> searchEmailsWithCriteria(
+            @PathVariable String folderId,
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "sentDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        List<Email> emails = emailService.searchEmailsWithCriteria(
+                folderId, keyword, page, size, sortBy, sortDirection
+        );
+        return ResponseEntity.ok(emails);
+    }
+    // filter with most fields and a date range(start - end)
+    @PostMapping("/folder/{folderId}/filter-criteria")
+    public ResponseEntity<List<Email>> filterEmailsWithCriteria(
+            @PathVariable String folderId,
+            @RequestBody EmailFilterDTO filterDTO) {
+        List<Email> emails = emailService.filterEmailsWithCriteria(folderId, filterDTO);
+        return ResponseEntity.ok(emails);
+    }
+    // search and filter combined ( i guess it has no importance for now )
+    @PostMapping("/folder/{folderId}/search-filter-criteria")
+    public ResponseEntity<List<Email>> searchAndFilterWithCriteria(
+            @PathVariable String folderId,
+            @RequestBody EmailFilterDTO filterDTO) {
+        List<Email> emails = emailService.searchAndFilterWithCriteria(folderId, filterDTO);
+        return ResponseEntity.ok(emails);
+    }
+
+    //add emails to folder by folderid(without validators) , just for testing)
+    @PostMapping("/folder/{folderId}/add")
+    public ResponseEntity<?> addEmailToFolder(
+            @PathVariable String folderId,
+            @ModelAttribute EmailDTO emailDTO) {
+        try {
+            // Create email directly in the specified folder
+            Email email = emailService.addEmailToFolder(folderId, emailDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(email);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

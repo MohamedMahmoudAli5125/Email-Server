@@ -18,4 +18,5 @@ export class MailService {
   draftMail(email: FormData) {
     return this.http.post<Email>(this.apiUrl + '/draft', email);
   }
+  getMail()
 }
