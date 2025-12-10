@@ -1,4 +1,4 @@
-package Email_server.Backend.services;
+package com.email_server.backend.services;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,12 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.email_server.backend.Entities.Attachment;
+import com.email_server.backend.Repositories.AttachmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import Email_server.Backend.Entities.Attachment;
-import Email_server.Backend.Repositories.AttachmentRepository;
+
 // first how we make this we save on my disk attachments and what in db and relations are the name size and path to not store in db 
 // heavy things 
 // so we store in dist and make my attachment entity

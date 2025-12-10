@@ -1,4 +1,4 @@
-package com.email_server.backend.Services;
+package com.email_server.backend.services;
 
 import java.util.List;
 

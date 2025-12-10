@@ -2,8 +2,10 @@
 
   <app-nav-bar></app-nav-bar>
 
-  <app-side-bar></app-side-bar>
+  <app-side-bar (showCompose)="toggleCompose($event)"></app-side-bar>
 
-  <app-mail-box></app-mail-box>
+  <app-mail-box *ngIf="!showCompose"></app-mail-box>
+
+  <app-compose-box *ngIf="showCompose"></app-compose-box>
 
 </body>

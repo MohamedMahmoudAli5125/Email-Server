@@ -1,40 +1,54 @@
 <div class="side-bar">
     <div class="tabs">
-      <div class="tab inbox-tab">
+
+      <div (click)="openCompose()" class="tab compose-tab"> 
+        <div class="tab-img-container">
+          <img class="tab-img" src="../assets/static/compose.png" alt="">
+        </div>
+        <div class="tab-title">Compose</div>
+      </div>
+
+      <div (click)="closeCompose()" class="tab inbox-tab">
         <div class="tab-img-container">
           <img class="tab-img" src="../assets/static/inbox.png" alt="">
         </div>
-        <div class="tab-title">Inbox</div>
+        <div (click)="closeCompose()" class="tab-title">Inbox</div>
       </div>
-      <div class="tab draft-tab">
+
+      <div (click)="closeCompose()" class="tab draft-tab">
         <div class="tab-img-container">
           <img class="tab-img" src="../assets/static/draft.png" alt="">
         </div>
         <div class="tab-title">Draft</div>
       </div>
-      <div class="tab important-tab">
+
+      <div (click)="closeCompose()" class="tab important-tab">
         <div class="tab-img-container">
           <img class="tab-img" src="../assets/static/important.png" alt="">
         </div>
         <div class="tab-title">Important</div>
       </div>
-      <div class="tab starred-tab">
+
+      <div (click)="closeCompose()" class="tab starred-tab">
         <div class="tab-img-container">
           <img class="tab-img" src="../assets/static/starred.png" alt="">
         </div>
         <div class="tab-title">Starred</div>
       </div>
-      <div class="tab trash-tab">
+
+      <div (click)="closeCompose()" class="tab trash-tab">
         <div class="tab-img-container">
           <img class="tab-img" src="../assets/static/trash.png" alt="">
         </div>
         <div class="tab-title">Trash</div>
       </div>
-      <div class="tab custom-tab">
+
+      <div (click)="closeCompose()" class="tab custom-tab">
         <div class="tab-img-container">
           <img class="tab-img" src="../assets/static/folder.png" alt="">
         </div>
         <div class="tab-title">Project (custom)</div>
       </div>
+      
     </div>
   </div>

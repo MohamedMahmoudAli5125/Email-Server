@@ -16,6 +16,8 @@
 .tab {
     display: flex;
     margin-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .tab-img-container {

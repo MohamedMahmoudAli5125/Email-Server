@@ -1,6 +1,6 @@
 package com.email_server.backend.enums;
 
-public enum EmailPriority {
+public enum     EmailPriority {
     LOW(1),
     NORMAL(2),
     HIGH(3),

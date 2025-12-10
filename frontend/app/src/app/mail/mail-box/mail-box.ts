@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { User } from '../../models/user';
 import { AuthService } from '../../auth/auth.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-mail-box',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './mail-box.html',
   styleUrl: './mail.css',
 })

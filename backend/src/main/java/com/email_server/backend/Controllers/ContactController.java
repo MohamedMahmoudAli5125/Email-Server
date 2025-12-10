@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.email_server.backend.Dto.ContactDTO;
 import com.email_server.backend.Entities.Contact;
-import com.email_server.backend.Services.ContactService;
+import com.email_server.backend.services.ContactService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
