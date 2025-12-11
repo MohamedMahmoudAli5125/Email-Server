@@ -4,6 +4,7 @@ import { MainLayout } from './layouts/main-layout/main-layout';
 import { RegisterComponent } from './auth/register-component/register-component';
 import { LoginComponent } from './auth/login-component/login-component';
 import { App } from './app';
+import{MailPageComponent }from './mail/mail-page/mail-page.component'
 
 export const routes: Routes = [
     // {path: 'inbox', component: MainLayout},
@@ -13,7 +14,10 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: 'app', component: MainLayout }
+
+    { path: 'app', component: MainLayout },
+    { path: 'mailpage', component: MailPageComponent }
+
 
     // {path: 'register', component: RegisterComponent},
 ];
