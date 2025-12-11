@@ -74,7 +74,7 @@ export class ComposeBox {
   makeMailForm(emailForm: NgForm) {
 
     const email: Email = {
-      from: this.authService.currentUser.email,
+      fromEmail: this.authService.currentUser.email,
       to: emailForm.value.to.split(',').map((x: string) => x.trim()),
       cc: emailForm.value.cc ? emailForm.value.cc.split(',').map((x: string) => x.trim()) : [],
       bcc: emailForm.value.bcc ? emailForm.value.bcc.split(',').map((x: string) => x.trim()) : [],
@@ -87,15 +87,15 @@ export class ComposeBox {
     const formData = new FormData();
 
     formData.append('userId', this.authService.currentUser.id);
-    formData.append('fromEmail', email.from);
-    formData.append('to', email.to.join(','));
-    formData.append('cc', email.cc.join(','));
-    formData.append('bcc', email.bcc.join(','));
+    formData.append('fromEmail', email.fromEmail);
+    formData.append('to', (email.to ?? []).join(','));
+    formData.append('cc', (email.cc ?? []).join(','));
+    formData.append('bcc', (email.bcc ?? []).join(','));
     formData.append('subject', email.subject);
     formData.append('body', email.body);
     formData.append('priority', email.priority.toString());
 
-    email.attachmentFiles.forEach(file => {
+    (email.attachmentFiles ?? []).forEach(file => {
       formData.append('attachmentFiles', file, file.name);
     });
 
