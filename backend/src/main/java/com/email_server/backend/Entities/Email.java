@@ -3,11 +3,15 @@ package com.email_server.backend.Entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import com.email_server.backend.enums.EmailPriority;
+
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Data;
 
 @Entity
 @Table(name = "emails", indexes = {
@@ -82,6 +86,7 @@ public class Email {
     // Helper methods
     public void addAttachment(Attachment attachment) {
         attachments.add(attachment);
+    
         attachment.setEmail(this);
     }
     

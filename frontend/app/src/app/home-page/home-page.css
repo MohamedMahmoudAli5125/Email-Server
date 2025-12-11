@@ -1,0 +1,17 @@
+.layout {
+  display: flex;
+  flex-direction: row;   
+  height: 100vh;       
+}
+
+/* راح تحتاج تحدد عرض كل جزء */
+app-sidebar {
+  width: 20%;
+}
+
+app-email-list {
+  width: 100%;
+  overflow-y: auto;
+}
+
+

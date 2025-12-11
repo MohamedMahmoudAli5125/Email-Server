@@ -39,8 +39,8 @@ export class LoginComponent {
         localStorage.setItem('userName', response.name);
         
         alert('Login Successful!');
-        
-        this.router.navigate(['/app']);
+        // console.log("yes");
+        this.router.navigate(['/home']);
       },
       error: (error) => {
         console.error('Login failed', error);

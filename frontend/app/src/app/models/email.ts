@@ -41,10 +41,10 @@
 import { EmailPriority } from "./enums";
 
 export interface Email {
-  id?: string;
+  id: string;
   fromEmail: string;
-  to?: string[];
-  toList?: string[]; // Backend uses toList
+  to: string[];
+  toList: string[]; // Backend uses toList
   cc?: string[];
   bcc?: string[];
   subject: string;
@@ -52,10 +52,11 @@ export interface Email {
   priority: EmailPriority;
   attachmentFiles?: File[];
   attachments?: Attachment[];
-  date?: Date;
-  sentDate?: string; // Backend uses sentDate
-  read?: boolean;
-  archived?: boolean;
+ 
+  sentDate: string; // Backend uses sentDate
+  isRead: boolean;
+  archived: boolean;
+   isImportant:boolean;
 }
 
 export interface Attachment {

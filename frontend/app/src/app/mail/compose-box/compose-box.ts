@@ -81,7 +81,13 @@ export class ComposeBox {
       subject: emailForm.value.subject,
       body: emailForm.value.body,
       priority: this.setPriority(emailForm.value.priority),
-      attachmentFiles: this.files || []
+      attachmentFiles: this.files || [],
+      id: '',
+      toList: [],
+     sentDate : '',
+      isRead: false,
+      archived: false,
+      isImportant: false
     };
 
     const formData = new FormData();

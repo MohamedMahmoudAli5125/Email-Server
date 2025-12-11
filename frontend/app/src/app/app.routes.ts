@@ -5,6 +5,8 @@ import { RegisterComponent } from './auth/register-component/register-component'
 import { LoginComponent } from './auth/login-component/login-component';
 import { App } from './app';
 import{MailPageComponent }from './mail/mail-page/mail-page.component'
+import { SidebarComponent } from './slidebar.component/sidebar.component';
+import { HomePage } from './home-page/home-page';
 
 export const routes: Routes = [
     // {path: 'inbox', component: MainLayout},
@@ -16,8 +18,11 @@ export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
 
     { path: 'app', component: MainLayout },
-    { path: 'mailpage', component: MailPageComponent }
-
-
+    { path: 'mailpage', component: MailPageComponent },
+    {path:'slidebar',component:SidebarComponent},
+{path:'home',component:HomePage},
+// {path:'home/Trash',component:HomePage},
+// {path:'home/Custom',component:HomePage},
+// {path:'home/Drafts',component:HomePage},
     // {path: 'register', component: RegisterComponent},
 ];

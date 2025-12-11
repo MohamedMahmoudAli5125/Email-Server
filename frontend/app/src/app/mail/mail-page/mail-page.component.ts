@@ -669,7 +669,7 @@ export class MailPageComponent implements OnInit {
       this.currentEmail = this.emailList[index];
       this.currentEmailIndex = index;
       
-      if (!this.currentEmail.read) {
+      if (!this.currentEmail.isRead) {
         this.markAsRead(this.currentEmail);
       }
     }
@@ -737,13 +737,13 @@ export class MailPageComponent implements OnInit {
 
   markAsUnread() {
     if (this.currentEmail) {
-      this.currentEmail.read = false;
+      this.currentEmail.isRead = false;
       this.showActionFeedback('Marked as unread');
     }
   }
 
   markAsRead(email: Email) {
-    email.read = true;
+    email.isRead = true;
   }
 
   moveTo() {

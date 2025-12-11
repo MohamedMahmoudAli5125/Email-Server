@@ -5,6 +5,7 @@ import { MailBox } from "./mail/mail-box/mail-box";
 import { NavBar } from "./shared/nav-bar/nav-bar";
 import { NgModel } from '@angular/forms';
 import { AuthService } from './auth/auth.service';
+import { SidebarComponent } from './slidebar.component/sidebar.component';
 
 @Component({
   selector: 'app-root',

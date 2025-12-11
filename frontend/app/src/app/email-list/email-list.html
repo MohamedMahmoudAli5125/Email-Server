@@ -1,0 +1,155 @@
+<!-- email-list.html -->
+<div class="email-list-container">
+  <!-- Toolbar -->
+  <div class="email-toolbar">
+    <div class="toolbar-left">
+      <label class="select-all-wrapper">
+        <input 
+          type="checkbox" 
+          [checked]="selectAll"
+          (change)="toggleSelectAll()"
+          class="checkbox-input"
+        >
+        <span class="checkbox-custom"></span>
+      </label>
+      
+      <button 
+        class="toolbar-icon-btn"
+        [class.visible]="showActions"
+        (click)="bulkDelete()"
+        title="Delete"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        </svg>
+      </button>
+
+      <div class="move-dropdown" *ngIf="showActions">
+        <button class="toolbar-icon-btn" title="Move to">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
+        </button>
+        <div class="dropdown-menu">
+          <button 
+            *ngFor="let folder of getAvailableFolders()" 
+            (click)="bulkMove(folder.id)"
+            class="dropdown-item"
+          >
+            {{ folder.name }}
+          </button>
+        </div>
+      </div>
+
+      <button 
+        class="toolbar-icon-btn refresh-btn"
+        (click)="loadEmails()"
+        title="Refresh"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="toolbar-right">
+      <span class="page-info">{{ (currentPage * 10 + 1) }}-{{ Math.min((currentPage + 1) * 10, totalEmails) }} of {{ totalEmails }}</span>
+      <button 
+        class="toolbar-icon-btn"
+        [disabled]="currentPage === 0"
+        (click)="previousPage()"
+        title="Newer"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <button 
+        class="toolbar-icon-btn"
+        [disabled]="currentPage >= totalPages - 1"
+        (click)="nextPage()"
+        title="Older"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Email List -->
+  <div class="emails-wrapper" *ngIf="!loading">
+    <div 
+      *ngFor="let email of emails" 
+      class="email-row"
+      [class.unread]="!email.isRead"
+      [class.selected]="isSelected(email.id)"
+      (click)="openEmail(email, $event)"
+    >
+      <!-- Checkbox -->
+      <div class="email-checkbox" (click)="$event.stopPropagation()">
+        <label class="checkbox-wrapper">
+          <input 
+            type="checkbox" 
+            [checked]="isSelected(email.id)"
+            (change)="toggleSelect(email.id, $event)"
+            class="checkbox-input"
+          >
+          <span class="checkbox-custom"></span>
+        </label>
+      </div>
+
+      <!-- Star -->
+      <div class="email-star" (click)="toggleStar(email, $event)">
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          [attr.fill]="email.isImportant ? '#f4b400' : 'none'"
+          [attr.stroke]="email.isImportant ? '#f4b400' : '#5f6368'"
+          stroke-width="2"
+        >
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+
+      <!-- Sender -->
+      <div class="email-sender">
+        {{ email.fromEmail }}
+      </div>
+
+      <!-- Subject & Preview -->
+      <div class="email-content">
+        <span class="email-subject">{{ email.subject }}</span>
+        <span class="email-preview"> - {{ email.body | slice:0:100 }}</span>
+      </div>
+
+      <!-- Attachments indicator -->  
+       <!-- we need boolean called has attachment in backend and app in fornt also  -->
+      <div class="email-attachment" >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </div>
+
+      <!-- Date -->
+      <div class="email-date">
+        {{ formatDate(email.sentDate) }}
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="emails.length === 0">
+      <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#dadce0" stroke-width="1">
+        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+      <p>No emails in this folder</p>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading emails...</p>
+  </div>
+</div>

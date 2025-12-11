@@ -2,18 +2,16 @@ package com.email_server.backend.Repositories;
 
 import java.time.LocalDateTime;
 
-//import org.springframework.boot.data.autoconfigure.web.DataWebProperties.Pageable;
-//import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.email_server.backend.Entities.Email;
 import com.email_server.backend.enums.EmailPriority;
-
+@Repository
 public interface EmailRepository  extends JpaRepository< Email,String> {
 
 // this pageable what tell to db give the first 10 first 20 we give the method thie in service  and return page (mean here the first rows )

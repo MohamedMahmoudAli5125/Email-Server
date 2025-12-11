@@ -1,0 +1,72 @@
+<!-- ============================================ -->
+<!-- src/app/components/sidebar/sidebar.component.html -->
+<!-- ============================================ -->
+
+<div class="sidebar">
+  <!-- Compose Button -->
+  <button class="compose-btn" (click)="navigateToFolder('')">
+    <span class="compose-icon">✏️</span>
+    <span class="compose-text">Compose</span>
+  </button>
+
+  <!-- Folders List -->
+  <nav class="folders-nav">
+    <div 
+      *ngFor="let folder of folders"
+      class="folder-item"
+      (click)="navigateToFolder(folder.id)"
+    >
+      <span class="folder-icon">
+        {{ folder.type === 'INBOX' ? '📥' : 
+           folder.type === 'SENT' ? '📤' : 
+           folder.type === 'DRAFT' ? '📝' : 
+           folder.type === 'TRASH' ? '🗑️' : '📁' }}
+      </span>
+      <span class="folder-name">{{ folder.name }}</span>
+      
+      <!-- Delete button for custom folders -->
+      <button 
+        *ngIf="folder.type === 'CUSTOM'"
+        class="folder-delete"
+        (click)="deleteFolder(folder.id, $event)"
+        title="Delete folder"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Add New Folder Button -->
+    <div class="folder-item add-folder" (click)="showCreateFolder()" *ngIf="!showNewFolder">
+      <span class="folder-icon">➕</span>
+      <span class="folder-name">Create new folder</span>
+    </div>
+
+    <!-- New Folder Input -->
+    <div class="new-folder-form" *ngIf="showNewFolder">
+      <input 
+        type="text"
+        [(ngModel)]="newFolderName"
+        (keyup.enter)="createFolder()"
+        placeholder="Folder name"
+        class="folder-input"
+        autofocus
+      />
+      <div class="folder-form-actions">
+        <button class="btn-create" (click)="createFolder()">Create</button>
+        <button class="btn-cancel" (click)="cancelCreate()">Cancel</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Labels Section -->
+  <div class="labels-section">
+    <div class="labels-header">
+      <span>Labels</span>
+    </div>
+    
+    <div class="label-item" (click)="goToContacts()">
+      <span class="label-icon">👥</span>
+      <span class="label-name">Contacts</span>
+    </div>
+  </div>
+</div>
