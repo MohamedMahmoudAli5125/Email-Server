@@ -20,23 +20,39 @@ export class AuthService {
 
   login(credentials: {email: string, password: string}): Observable<any> {
     return this.http.post<User>(`${this.apiUrl}/login`, credentials).pipe(tap(
-      res => { this.currentUser = res; console.log(this.currentUser)}
+      res => { 
+        this.currentUser = res; 
+        console.log(this.currentUser);
+        
+        // Store user data safely
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('userId', res.id);
+          localStorage.setItem('userEmail', res.email);
+          localStorage.setItem('userName', res.name);
+        }
+      }
     ));
   }
 
-  //maloosh lazma (m4 4a88aleen b localStorage w JWTs)?
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('userId');
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return !!localStorage.getItem('userId');
+    }
+    return false;
   }
 
-  //maloosh lazma (m4 4a88aleen b localStorage w JWTs)?
   getUserId(): string | null {
-    return localStorage.getItem('userId');
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem('userId');
+    }
+    return null;
   }
 
   logout(): void {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userName');
+    }
   }
 }

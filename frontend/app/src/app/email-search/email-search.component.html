@@ -1,0 +1,291 @@
+<!-- email-search.component.html -->
+<div class="email-search-container">
+  <!-- Header with Search Bar -->
+  <div class="search-header">
+    <div class="search-bar-wrapper">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search emails (from, to, subject, body)..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+      <button
+        class="filter-toggle-btn"
+        (click)="toggleAdvancedFilter()"
+        [class.active]="showAdvancedFilter"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        Filters
+        <span class="filter-count" *ngIf="getActiveFilterCount() > 0">
+          {{ getActiveFilterCount() }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Advanced Filters Panel -->
+  <div class="advanced-filters" *ngIf="showAdvancedFilter">
+    <div class="filters-grid">
+      <!-- From Filter -->
+      <div class="filter-field">
+        <label class="filter-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          From
+        </label>
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="sender@example.com"
+          [(ngModel)]="filters.from"
+          (input)="onFilterChange()"
+        />
+      </div>
+
+      <!-- To Filter -->
+      <div class="filter-field">
+        <label class="filter-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          To
+        </label>
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="recipient@example.com"
+          [(ngModel)]="filters.to"
+          (input)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Subject Filter -->
+      <div class="filter-field">
+        <label class="filter-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Subject
+        </label>
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="Email subject..."
+          [(ngModel)]="filters.subject"
+          (input)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Body Filter -->
+      <div class="filter-field">
+        <label class="filter-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Body Text
+        </label>
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="Search in email body..."
+          [(ngModel)]="filters.body"
+          (input)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Start Date -->
+      <div class="filter-field">
+        <label class="filter-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          From Date
+        </label>
+        <input
+          type="date"
+          class="filter-input"
+          [(ngModel)]="filters.startDate"
+          (change)="onFilterChange()"
+        />
+      </div>
+
+      <!-- End Date -->
+      <div class="filter-field">
+        <label class="filter-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          To Date
+        </label>
+        <input
+          type="date"
+          class="filter-input"
+          [(ngModel)]="filters.endDate"
+          (change)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Priority -->
+      <div class="filter-field">
+        <label class="filter-label">Priority</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="filters.priority"
+          (change)="onFilterChange()"
+        >
+          <option [ngValue]="undefined">All Priorities</option>
+          <option [ngValue]="EmailPriority.URGENT">Urgent</option>
+          <option [ngValue]="EmailPriority.HIGH">High</option>
+          <option [ngValue]="EmailPriority.NORMAL">Normal</option>
+          <option [ngValue]="EmailPriority.LOW">Low</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Checkbox Filters -->
+    <div class="checkbox-filters">
+      <label class="checkbox-label" (click)="toggleHasAttachments()">
+        <input
+          type="checkbox"
+          [checked]="filters.hasAttachments === true"
+          [indeterminate]="filters.hasAttachments === false"
+          readonly
+        />
+        <span>
+          {{ filters.hasAttachments === true ? 'Has Attachments' : 
+             filters.hasAttachments === false ? 'No Attachments' : 
+             'Any Attachments' }}
+        </span>
+      </label>
+
+      <label class="checkbox-label" (click)="toggleIsRead()">
+        <input
+          type="checkbox"
+          [checked]="filters.isRead === false"
+          [indeterminate]="filters.isRead === true"
+          readonly
+        />
+        <span>
+          {{ filters.isRead === false ? 'Unread Only' : 
+             filters.isRead === true ? 'Read Only' : 
+             'All Emails' }}
+        </span>
+      </label>
+
+      <label class="checkbox-label" (click)="toggleIsImportant()">
+        <input
+          type="checkbox"
+          [checked]="filters.isImportant === true"
+          [indeterminate]="filters.isImportant === false"
+          readonly
+        />
+        <span>
+          {{ filters.isImportant === true ? 'Important Only' : 
+             filters.isImportant === false ? 'Not Important' : 
+             'Any Importance' }}
+        </span>
+      </label>
+    </div>
+
+    <!-- Clear Filters Button -->
+    <button
+      class="clear-filters-btn"
+      *ngIf="getActiveFilterCount() > 0"
+      (click)="clearFilters()"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Clear All Filters
+    </button>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary">
+    <span *ngIf="!loading">
+      Showing {{ filteredEmails.length }} result{{ filteredEmails.length !== 1 ? 's' : '' }}
+      <span *ngIf="searchTerm" class="search-term">for "{{ searchTerm }}"</span>
+    </span>
+    <span *ngIf="loading">Searching...</span>
+  </div>
+
+  <!-- Email Results -->
+  <div class="email-results">
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Searching emails...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading && filteredEmails.length === 0">
+      <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#dadce0" stroke-width="1">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+      <p class="empty-title">No emails found</p>
+      <p class="empty-subtitle">Try adjusting your search or filters</p>
+    </div>
+
+    <!-- Email List -->
+    <div class="email-list" *ngIf="!loading && filteredEmails.length > 0">
+      <div
+        *ngFor="let email of filteredEmails"
+        class="email-item"
+        [class.unread]="!email.isRead"
+        (click)="openEmail(email)"
+      >
+        <!-- Email Header -->
+        <div class="email-header">
+          <div class="email-from">
+            {{ email.fromEmail }}
+            <span class="star" *ngIf="email.isImportant">★</span>
+          </div>
+          <div class="email-date">{{ formatDate(email.sentDate) }}</div>
+        </div>
+
+        <!-- Email Subject -->
+        <div class="email-subject">
+          {{ email.subject }}
+          <span class="priority-badge high" *ngIf="email.priority === 'HIGH'">High Priority</span>
+          <span class="attachment-icon" *ngIf="email.attachments && email.attachments.length > 0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Email To -->
+        <div class="email-to">
+          To: {{ email.toList.join(', ') }}
+        </div>
+
+        <!-- Email Preview -->
+        <div class="email-preview">
+          {{ email.body | slice:0:150 }}{{ email.body.length > 150 ? '...' : '' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -3,7 +3,7 @@
 // ============================================
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Folder } from '../models/folder';
 import { AuthService } from '../auth/auth.service';
 
@@ -23,12 +23,26 @@ export class FolderService {
   // Get user folders
   getFolders(): Observable<Folder[]> {
     const userId = this.authService.getUserId();
+    
+    // Add check for userId
+    if (!userId) {
+      console.warn('No userId found, cannot fetch folders');
+      return of([]); // Return empty observable
+    }
+    
     return this.http.get<Folder[]>(`${this.apiUrl}/user/${userId}`);
   }
 
   // Create folder
   createFolder(name: string): Observable<Folder> {
     const userId = this.authService.getUserId();
+    
+    // Add check for userId
+    if (!userId) {
+      console.error('No userId found, cannot create folder');
+      return of({} as Folder); // Return empty folder observable
+    }
+    
     return this.http.post<Folder>(`${this.apiUrl}/user/${userId}`, { name });
   }
 
@@ -39,24 +53,28 @@ export class FolderService {
 
   // Load and store folders
   loadFolders(): void {
-    this.getFolders().subscribe(
-      folders => this.folders = folders,
-      error => console.error('Error loading folders:', error)
-    );
+    this.getFolders().subscribe({
+      next: (folders) => {
+        this.folders = folders;
+        console.log('Folders loaded:', folders);
+      },
+      error: (error) => {
+        console.error('Error loading folders:', error);
+        this.folders = []; // Set to empty array on error
+      }
+    });
   }
 
-
-  getFolderByID(Id: string) :Observable<Folder>  {
+  getFolderByID(Id: string): Observable<Folder> {
     return this.http.get<Folder>(`${this.apiUrl}/${Id}`);
   }
 
-
-//   Get folder by type
+  // Get folder by type
   getFolderByType(type: string): Folder | undefined {
     return this.folders.find(f => f.type === type.toUpperCase());
   }
 
-// by name for custom 
+  // by name for custom 
   getFolderByName(name: string): Folder | undefined {
     return this.folders.find(f => f.name === name.toUpperCase());
   }
