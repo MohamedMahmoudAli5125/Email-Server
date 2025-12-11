@@ -30,3 +30,26 @@
     width: 100%;
     height: 100%;
 }
+.mailpage-menu {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+  background-color: #f1f3f4;
+}
+
+.mailpage-menu:hover {
+  background-color: #e8eaed;
+}
+
+.menu-icon {
+  margin-right: 15px;
+  font-size: 18px;
+}
+
+.menu-text {
+  font-weight: 500;
+  color: #202124;
+}
