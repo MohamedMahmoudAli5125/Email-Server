@@ -40,7 +40,7 @@ public class EmailService {
     private final EmailRepository emailRepository;
     private final FolderService folderService;
     private final UserRepository userRepository;
-    private final com.email_server.backend.services.AttachmentService attachmentService ;
+    private final com.email_server.backend.Services.AttachmentService attachmentService ;
     private final EmailQueueManager queueManager;
     private final EmailFilterService emailFilterService ;
     private final FolderRepository folderRepository; // Make sure you have this
@@ -48,7 +48,7 @@ public class EmailService {
 
     public EmailService(EmailRepository emailRepository,
                        FolderService folderService,
-                       com.email_server.backend.services.AttachmentService attachmentService,
+                       com.email_server.backend.Services.AttachmentService attachmentService,
                        UserRepository userRepository,
                         EmailFilterService emailFilterService,
                         FolderRepository folderRepository
@@ -76,17 +76,7 @@ public class EmailService {
 
 // here must make validation those to list are exitst 
 // then put in queue whihc in worker it will make enqueue and call sendEmail and put it userId ,EmailDTO 
-
-
-
-
-
-
-
-        List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
-        
-
-        // Build email using Builder Pattern
+// Build email using Builder Pattern
         Email email = Email.builder()
                 .fromEmail(emailDTO.getFromEmail())
                 .toList(emailDTO.getTo())
@@ -94,14 +84,39 @@ public class EmailService {
                 .body(emailDTO.getBody())
                 .priority(emailDTO.getPriority() != null ? emailDTO.getPriority() : EmailPriority.NORMAL)
                 .sentDate(LocalDateTime.now())
-                .attachments(attachments)
                 .build();
+      Folder sentFolder = folderService.getUserFolderByType(userId, FolderType.SENT);
+      email.setFolder(sentFolder);
+      // save email
+      Email savedEmail = emailRepository.save(email);
+
+
+      List<Attachment> attachments = attachmentService.saveAttachments(
+              emailDTO.getAttachmentFiles(),
+              savedEmail
+      );
+      savedEmail.setAttachments(attachments);
+
+
+//        List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
+        
+
+//        // Build email using Builder Pattern
+//        Email email = Email.builder()
+//                .fromEmail(emailDTO.getFromEmail())
+//                .toList(emailDTO.getTo())
+//                .subject(emailDTO.getSubject())
+//                .body(emailDTO.getBody())
+//                .priority(emailDTO.getPriority() != null ? emailDTO.getPriority() : EmailPriority.NORMAL)
+//                .sentDate(LocalDateTime.now())
+//                .attachments(attachments)
+//                .build();
         
         // Save to sender's SENT folder by get the folder of of the user by userId and Type 
-        Folder sentFolder = folderService.getUserFolderByType(userId, FolderType.SENT);
-        email.setFolder(sentFolder);
-        // save email
-        Email savedEmail = emailRepository.save(email);
+//        Folder sentFolder = folderService.getUserFolderByType(userId, FolderType.SENT);
+//        email.setFolder(sentFolder);
+//        // save email
+//        Email savedEmail = emailRepository.save(email);
         
         // Use Queue for multiple recipients (Singleton Pattern)
         queueManager.enqueue(savedEmail);
