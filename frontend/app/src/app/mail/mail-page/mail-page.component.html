@@ -1,0 +1,240 @@
+
+<div class="mail-page-container">
+  <!-- Fixed header with actions -->
+
+  <div class="fixed-header">
+    <div class="action-toolbar">
+      <div class="toolbar-left">
+        <div class="folder-info">
+          <span class="folder-label">Folder ID:</span>
+          <span class="folder-id">{{ folderId }}</span>
+          <span class="folder-count">({{ totalEmails }} emails)</span>
+        </div>
+      </div>
+
+      <div class="toolbar-buttons">
+        <span class="navigation-status">{{ navigationStatus }}</span>
+        
+        <button 
+          class="toolbar-btn" 
+          (click)="navigateEmail('prev')" 
+          [disabled]="!canGoPrev">
+          <span>◀</span>
+          <span>Previous</span>
+        </button>
+        
+        <button 
+          class="toolbar-btn" 
+          (click)="navigateEmail('next')" 
+          [disabled]="!canGoNext">
+          <span>Next</span>
+          <span>▶</span>
+        </button>
+        
+        <div class="separator"></div>
+        
+        <button class="toolbar-btn" (click)="archiveEmail()">
+          <span>📦</span>
+          <span>{{ currentEmail?.archived ? 'Unarchive' : 'Archive' }}</span>
+        </button>
+        
+        <button class="toolbar-btn" (click)="deleteEmail()">
+          <span>🗑️</span>
+          <span>Delete</span>
+        </button>
+        
+        <button class="toolbar-btn" (click)="markAsUnread()">
+          <span>✉️</span>
+          <span>Mark as unread</span>
+        </button>
+        
+        <button class="toolbar-btn" (click)="moveTo()">
+          <span>📁</span>
+          <span>Move to</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action feedback toast -->
+  <div class="action-feedback" [class.show]="showFeedback">
+    ✓ {{ actionFeedback }}
+  </div>
+
+  <!-- Main content area -->
+  <div class="email-content-area">
+    <!-- Error state -->
+    <div *ngIf="isError" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h3>Failed to load emails</h3>
+      <p>{{ errorMessage }}</p>
+      <button class="retry-btn" (click)="loadFolderEmails()">Retry</button>
+    </div>
+
+    <!-- Email list -->
+    <div class="email-list-container" *ngIf="!isError">
+      <div 
+        *ngFor="let email of emailList; let i = index" 
+        class="email-list-item" 
+        [class.selected]="currentEmailIndex === i"
+        [class.unread]="!email.read"
+        (click)="loadEmailByIndex(i)">
+        
+        <div class="email-indicators">
+          <span class="indicator archived" *ngIf="email.archived">A</span>
+          <span class="indicator unread" *ngIf="!email.read">●</span>
+          <span class="indicator current" *ngIf="currentEmailIndex === i">▶</span>
+        </div>
+        
+        <div class="email-sender">{{ email.fromEmail }}</div>
+        <div class="email-subject">{{ email.subject }}</div>
+        <div class="email-preview">
+          {{ email.body ? (email.body.substring(0, 50) + (email.body.length > 50 ? '...' : '')) : '(No content)' }}
+        </div>
+        <div class="email-date">{{ formatDate(email.date!) }}</div>
+      </div>
+
+      <!-- Pagination controls -->
+      <div class="pagination-controls" *ngIf="totalPages > 1">
+        <button class="page-btn" (click)="loadPrevPage()" [disabled]="currentPage === 0">
+          ◀ Previous Page
+        </button>
+        <span class="page-info">Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+        <button class="page-btn" (click)="loadNextPage()" [disabled]="currentPage >= totalPages - 1">
+          Next Page ▶
+        </button>
+      </div>
+    </div>
+
+    <!-- Email detail -->
+    <div class="email-detail-container" *ngIf="!isError">
+      <div *ngIf="currentEmail">
+        <!-- Email header -->
+        <div class="email-header">
+          <h1 class="email-title">{{ currentEmail.subject }}</h1>
+          <span class="email-priority" [ngClass]="getPriorityClass(currentEmail.priority)">
+            {{ currentEmail.priority || 'NORMAL' }}
+          </span>
+        </div>
+
+        <!-- Email metadata -->
+        <div class="email-meta">
+          <div class="sender-info">
+            <strong>From:</strong> {{ currentEmail.fromEmail }}
+          </div>
+          <div class="recipient-info">
+            <strong>To:</strong> {{ currentEmail.to?.join(', ') }}
+          </div>
+          <div class="recipient-info" *ngIf="currentEmail.cc && currentEmail.cc.length > 0">
+            <strong>Cc:</strong> {{ currentEmail.cc.join(', ') }}
+          </div>
+          <div class="date-info">
+            <strong>Date:</strong> {{ formatDate(currentEmail.date!) }}
+          </div>
+        </div>
+
+        <!-- Email body -->
+        <div class="email-body">
+          {{ currentEmail.body || '(No content)' }}
+        </div>
+
+        <!-- Attachments -->
+        <div class="attachments" *ngIf="currentEmail.attachments && currentEmail.attachments.length > 0">
+          <div class="attachments-header">
+            <span>📎 Attachments ({{ currentEmail.attachments.length }})</span>
+            <button 
+              class="download-all-btn" 
+              (click)="downloadAllAttachments()"
+              [disabled]="downloadingAll">
+              <span *ngIf="!downloadingAll">⬇️ Download All</span>
+              <span *ngIf="downloadingAll">⏳ Downloading...</span>
+            </button>
+          </div>
+
+          <div class="attachment-list">
+            <div *ngFor="let file of currentEmail.attachments" class="attachment-item">
+              <!-- Attachment icon -->
+              <div class="attachment-icon">
+                {{ getAttachmentIcon(file.fileType) }}
+              </div>
+
+              <!-- Attachment info -->
+              <div class="attachment-info">
+                <div class="attachment-name">{{ file.fileName }}</div>
+                <div class="attachment-details">
+                  <span class="attachment-type">{{ file.fileType.split('/')[1] || 'file' }}</span>
+                  <span class="attachment-size">{{ formatFileSize(file.fileSize) }}</span>
+                  <span class="attachment-id" title="{{ file.id }}">ID: {{ file.id.substring(0, 8) }}...</span>
+                </div>
+              </div>
+
+              <!-- Attachment actions -->
+              <div class="attachment-actions">
+                <button 
+                  class="action-btn preview-btn" 
+                  (click)="previewAttachment(file)"
+                  title="Preview in new tab"
+                  [disabled]="isDownloading(file.id)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                
+                <button 
+                  class="action-btn download-btn" 
+                  (click)="downloadAttachment(file)"
+                  title="Download"
+                  [disabled]="isDownloading(file.id)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" *ngIf="!isDownloading(file.id)">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <div class="progress-spinner" *ngIf="isDownloading(file.id)" style="width: 16px; height: 16px; border-width: 2px;"></div>
+                </button>
+                
+                <a 
+                  [href]="getAttachmentDirectUrl(file)" 
+                  download="{{ file.fileName }}"
+                  class="action-btn direct-download" 
+                  title="Direct download link"
+                  [class.disabled]="isDownloading(file.id)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Download progress indicator -->
+          <div class="download-progress" *ngIf="downloadingAll">
+            <div class="progress-spinner"></div>
+            <span>Downloading all attachments...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No email selected -->
+      <div class="no-email-selected" *ngIf="!currentEmail && !isError && emailList.length > 0">
+        <div class="empty-state">
+          <h3>📧</h3>
+          <h3>No Email Selected</h3>
+          <p>Select an email from the list to view its contents</p>
+        </div>
+      </div>
+
+      <!-- No emails found -->
+      <div class="no-emails" *ngIf="!currentEmail && !isError && emailList.length === 0">
+        <div class="empty-state">
+          <h3>📭</h3>
+          <h3>No emails found</h3>
+          <p>Folder ID: {{ folderId }}</p>
+          <p>The folder is empty or doesn't exist</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
