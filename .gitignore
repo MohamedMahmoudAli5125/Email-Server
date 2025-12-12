@@ -3,9 +3,3 @@ dist/
 build/
 .env
 *.log
-*.gitignore
-/backend
-*.gitignore
-/backend/
-/.idea/
-/.gitignore
