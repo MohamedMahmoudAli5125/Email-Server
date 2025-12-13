@@ -1,4 +1,4 @@
-<div class="mail-container">
+<div *ngIf="showCompose" class="mail-container">
 
     <form #emailForm="ngForm" class="main">
         <div class="upper-section">
@@ -8,6 +8,12 @@
         <div class="lower-section">
             <textarea ngModel class="body-input" name="body" id="" placeholder="Body"></textarea>
             <input class="file-input" name="files" (change)="onFileSelected($event)" type="file" multiple>
+            <div class="attachments">
+                <div class="attachment" *ngFor="let file of attachments; let i = index">
+                    <span>{{ file.name }}</span>
+                    <button type="button" (click)="removeAttachment(i)">×</button>
+                </div>
+            </div>
             <div class="button-container">
                 <select ngModel name="priority" id="priority">
                     <option *ngFor="let p of priorities" [value]="p.toUpperCase()">{{p}}</option>

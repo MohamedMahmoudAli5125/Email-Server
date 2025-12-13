@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Injectable } from '@angular/core';
+import { Component, Injectable, Input } from '@angular/core';
 import { Form, FormsModule, NgForm } from '@angular/forms';
 import { Email } from '../../models/email';
 import { AuthService } from '../../auth/auth.service';
@@ -17,6 +17,8 @@ import { MailService } from '../service/mail.service';
 export class ComposeBox {
   files: File[] = []
   priorities: string[] = ['Normal', 'High', 'Urgent', 'Low']
+  attachments: File[] = []
+  @Input() showCompose = false;
 
   constructor(private authService: AuthService, private mailService: MailService) { }
 
@@ -25,6 +27,11 @@ export class ComposeBox {
     if (input.files) {
       this.files = Array.from(input.files);
       console.log(this.files)
+      for (let i = 0; i < input.files.length; i++) {
+        this.attachments.push(input.files[i]);
+      }
+
+      input.value = '';
     }
   }
 
@@ -84,7 +91,7 @@ export class ComposeBox {
       attachmentFiles: this.files || [],
       id: '',
       toList: [],
-     sentDate : '',
+      sentDate: '',
       isRead: false,
       archived: false,
       isImportant: false
@@ -106,5 +113,9 @@ export class ComposeBox {
     });
 
     return formData;
+  }
+
+  removeAttachment(index: number) {
+    this.attachments.splice(index, 1);
   }
 }

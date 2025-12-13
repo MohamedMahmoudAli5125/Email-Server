@@ -1,15 +1,18 @@
 .mail-container {
+    z-index: 100;
     position: fixed;
     display: flex;
     background-color: white;
-    top: 120px;
+    top: 220px;
     bottom: 20px;
     right: 20px;
-    width: 1050px;
+    width: 950px;
     border-radius: 20px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
     align-items: center;
     justify-content: center;
+    resize: both;
+    overflow: auto;
 }
 
 .main {
@@ -36,7 +39,8 @@
     vertical-align: top;
 }
 
-.subject-input, .receiver-input {
+.subject-input,
+.receiver-input {
     height: 25px;
 }
 
@@ -60,11 +64,12 @@
     align-self: flex-end;
 }
 
-.send, .draft {
+.send,
+.draft {
     margin-top: 3px;
     height: 50px;
     width: 80px;
-    background-color: blue;
+    background-color: #c2e7ff;
     border: darkblue;
     border-width: 1px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
@@ -72,14 +77,46 @@
     cursor: pointer;
     border-radius: 4px;
     margin: 5px;
+    color: black;
 }
 
 .file-input::file-selector-button {
-    background-color: blue;
+    background-color: #c2e7ff;
     border: darkblue;
     border-width: 1px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
-    color: white;
+    color: black;
     cursor: pointer;
-    border-radius: 4px; 
+    border-radius: 4px;
+}
+
+.attachments {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.attachment {
+    background: #f0f0f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.attachment button {
+    margin-left: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+    color: #888;
+}
+
+.attachment button:hover {
+    color: red;
 }

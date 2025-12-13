@@ -15,21 +15,25 @@ import { FolderService } from '../Services/folderService';
   styleUrls: ['./slidebar.component.css']
 })
 export class SidebarComponent implements OnInit {
+
   folders: Folder[] = [];
   showNewFolder = false;
   newFolderName = '';
-@Output() folderSelected = new EventEmitter<string>();
+
+  @Output() folderSelected = new EventEmitter<string>();
+  @Output() toggleComposeSignal = new EventEmitter<void>();
+
   constructor(
     private folderService: FolderService,
     private router: Router,
     private cd: ChangeDetectorRef
-  ) {}
-  
+  ) { }
+
 
   ngOnInit() {
     this.loadFolders();
   }
-  
+
 
   loadFolders() {
     this.folderService.getFolders().subscribe(
@@ -37,7 +41,7 @@ export class SidebarComponent implements OnInit {
         this.folders = folders;
         this.folderService.folders = folders;
         console.log(folders);
-         this.cd.detectChanges();
+        this.cd.detectChanges();
       }
     );
   }
@@ -46,7 +50,7 @@ export class SidebarComponent implements OnInit {
     console.log(folderId);
     // const name = folder.name.toLowerCase();
     // this.router.navigate([name]);
-     this.folderSelected.emit(folderId);
+    this.folderSelected.emit(folderId);
   }
 
   showCreateFolder() {
@@ -92,5 +96,9 @@ export class SidebarComponent implements OnInit {
 
   goToContacts() {
     this.router.navigate(['/mail/contacts']);
+  }
+
+  toggleCompose() {
+    this.toggleComposeSignal.emit();
   }
 }

@@ -1,7 +1,11 @@
 
 <div class="layout">
-  <app-sidebar  (folderSelected)="onFolderChange($event)" ></app-sidebar>
+  <app-sidebar  
+  (folderSelected)="onFolderChange($event)" 
+  (toggleComposeSignal)="toggleCompose()"
+  ></app-sidebar>
   <app-email-list  [folderId]="currentFolderId"
   (emailOpened)="onEmailOpened($event)"></app-email-list>
+  <app-compose-box [showCompose]="showCompose"></app-compose-box>
 
 </div>
