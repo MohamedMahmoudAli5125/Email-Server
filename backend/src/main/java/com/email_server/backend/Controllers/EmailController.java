@@ -47,11 +47,13 @@ import jakarta.validation.Valid;
     // ModelAttribute this to data form to give me attachments 
     @PostMapping("/send")
     public ResponseEntity<?> sendEmail(@RequestParam String userId,
-                                      @ModelAttribute EmailDTO emailDTO) {
+                                       @ModelAttribute EmailDTO emailDTO) {
+        System.out.println("...");
         try {
             Email email = emailService.sendEmail(userId, emailDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(email);
         } catch (Exception e) {
+            System.out.println("....");
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -157,10 +159,14 @@ import jakarta.validation.Valid;
     @DeleteMapping("/{emailId}")
     public ResponseEntity<?> deleteEmail(@PathVariable String emailId,
                                         @RequestParam String userId) {
+
+
         try {
             emailService.deleteEmail(emailId, userId);
             return ResponseEntity.ok(Map.of("message", "Email moved to trash"));
         } catch (Exception e) {
+            System.out.println("....");
+
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -169,6 +175,7 @@ import jakarta.validation.Valid;
     @DeleteMapping("/{emailId}/permanent")
     public ResponseEntity<?> deletePermanently(@PathVariable String emailId) {
         try {
+            System.out.println("DDD");
             emailService.deletePermanently(emailId);
             return ResponseEntity.ok(Map.of("message", "Email deleted permanently"));
         } catch (Exception e) {

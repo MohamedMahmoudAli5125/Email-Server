@@ -1,6 +1,7 @@
 
 <div class="layout">
   <app-sidebar  (folderSelected)="onFolderChange($event)" ></app-sidebar>
-  <app-email-list  [folderId]="currentFolderId"></app-email-list>
+  <app-email-list  [folderId]="currentFolderId"
+  (emailOpened)="onEmailOpened($event)"></app-email-list>
 
 </div>

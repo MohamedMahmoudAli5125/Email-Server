@@ -270,6 +270,8 @@
       [class.unread]="!email.isRead"
       [class.selected]="isSelected(email.id)"
       (click)="openEmail(email, $event)"
+      (dblclick)="onEmailDoubleClick(email)" 
+
     >
       <!-- Checkbox -->
       <div class="email-checkbox" (click)="$event.stopPropagation()">

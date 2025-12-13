@@ -40,6 +40,10 @@ export class EmailService {
   markRead(id: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}/read`, {});
   }
+  // In EmailService, add this method:
+markAsUnread(id: string): Observable<any> {
+  return this.http.put(`${this.apiUrl}/${id}/unread`, {});
+}
 
   toggleStar(id: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}/important`, {});
@@ -53,9 +57,9 @@ export class EmailService {
     const userId = this.auth.getUserId();
     return this.http.delete(`${this.apiUrl}/${id}?userId=${userId}`);
   }
-    deleteEmailPermanent(ids: string[]): Observable<any> {
+    deleteEmailPermanent(id: string[]): Observable<any> {
     const userId = this.auth.getUserId();
-    return this.http.delete(`${this.apiUrl}/${ids}?userId=${userId}`);
+    return this.http.delete(`${this.apiUrl}/${id}?userId=${userId}`);
   }
 
   bulkDelete(ids: string[]): Observable<any> {
@@ -70,4 +74,5 @@ export class EmailService {
   search(folderId: string, keyword: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/folder/${folderId}/search/subject?keyword=${keyword}`);
   }
+  
 }

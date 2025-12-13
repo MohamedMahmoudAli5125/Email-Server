@@ -69,9 +69,12 @@ public class EmailService {
 // UserId of who make send 
   @Transactional
     public Email sendEmail(String userId, EmailDTO emailDTO) {
+        System.out.println(".");
+
         User sender = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Sender not found"));
-        
+      System.out.println("..");
+
 
 
 // here must make validation those to list are exitst 

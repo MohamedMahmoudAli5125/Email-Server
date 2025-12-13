@@ -18,8 +18,10 @@ export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
 
     { path: 'app', component: MainLayout },
-    { path: 'mailpage', component: MailPageComponent },
-    {path:'slidebar',component:SidebarComponent},
+ { path: 'mailpage/:folderId/:emailId', component: MailPageComponent },
+  { path: 'mailpage/:folderId', component: MailPageComponent },
+  { path: 'mailpage', component: MailPageComponent },
+      {path:'slidebar',component:SidebarComponent},
 {path:'home',component:HomePage},
 // {path:'home/Trash',component:HomePage},
 // {path:'home/Custom',component:HomePage},

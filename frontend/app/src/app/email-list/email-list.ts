@@ -1,6 +1,6 @@
 import { Folder } from './../models/folder';
 import { FolderService } from './../Services/folderService';
-import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Email } from '../models/email';
@@ -18,6 +18,8 @@ import { Router } from '@angular/router';
 })
 export class EmailList implements OnChanges {
   @Input() folderId!: string;
+  @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string }>();
+
   emails: Email[] = [];
   loading = false;
   currentPage = 0;
@@ -255,6 +257,16 @@ export class EmailList implements OnChanges {
       this.emailService.markRead(email.id).subscribe();
     }
   }
+  onEmailDoubleClick(email: Email) {
+  if (email.id) {
+    console.log(email.id,this.folderId);
+    this.emailOpened.emit({ 
+      emailId: email.id, 
+      folderId: this.folderId 
+      
+    });
+  }
+}
 
   toggleSelect(emailId: string, event: Event) {
     event.stopPropagation();
