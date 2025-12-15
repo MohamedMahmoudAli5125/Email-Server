@@ -7,16 +7,7 @@ import com.email_server.backend.Entities.Contact;
 import com.email_server.backend.Services.ContactService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -33,6 +24,7 @@ public class ContactController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Contact>> getUserContacts(@PathVariable String userId) {
         List<Contact> contacts = contactService.getUserContacts(userId);
+            System.out.println(contacts.size());
         return ResponseEntity.ok(contacts);
     }
 
@@ -56,7 +48,11 @@ public class ContactController {
             Contact contact = contactService.createContact(userId, contactDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(contact);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Error creating contact",
+                    "message", e.getMessage()
+            ));
         }
     }
     
@@ -67,7 +63,11 @@ public class ContactController {
             Contact contact = contactService.updateContact(contactId, contactDTO);
             return ResponseEntity.ok(contact);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Error updating contact",
+                    "message", e.getMessage()
+            ));
         }
     }
     
@@ -80,4 +80,23 @@ public class ContactController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    @GetMapping("/user/{userId}/check-email")
+    public ResponseEntity<?> checkEmailInContacts(@PathVariable String userId,
+                                                  @RequestParam String email) {
+        try {
+            boolean exists = contactService.emailExistsInUserContacts(userId, email);
+            Contact contact = contactService.findContactByEmail(userId, email);
+
+            return ResponseEntity.ok(Map.of(
+                    "existsInContacts", exists,
+                    "contact", contact != null ? Map.of(
+                            "id", contact.getId(),
+                            "name", contact.getName()
+                    ) : null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
+

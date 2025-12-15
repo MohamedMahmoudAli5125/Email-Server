@@ -7,6 +7,8 @@ import { App } from './app';
 import{MailPageComponent }from './mail/mail-page/mail-page.component'
 import { SidebarComponent } from './slidebar.component/sidebar.component';
 import { HomePage } from './home-page/home-page';
+import { ContactsComponent } from './contacts/contacts.component';
+
 
 export const routes: Routes = [
     // {path: 'inbox', component: MainLayout},
@@ -22,6 +24,7 @@ export const routes: Routes = [
   { path: 'mail/:folderId', component: MailPageComponent },
 //   { path: 'mailpage', component: MailPageComponent },
   { path: 'mail', component: MailPageComponent },
+  { path: 'contacts', component: ContactsComponent },
 
       {path:'slidebar',component:SidebarComponent},
 {path:'home',component:HomePage},

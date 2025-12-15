@@ -1,0 +1,165 @@
+<!-- src/app/contacts/contacts.component.html -->
+<div class="contacts-container">
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <div class="error-icon">⚠️</div>
+    <div class="error-content">
+      <strong>Error:</strong>
+      <p>{{ errorMessage }}</p>
+    </div>
+    <button class="close-btn" (click)="errorMessage = null; ">✕</button>
+  </div>
+
+  <div class="contacts-header">
+    <button class="back-btn" (click)="goBack()" [disabled]="isLoading">← Back</button>
+    <h2>Contacts</h2>
+    <button 
+      class="add-btn" 
+      (click)="showAddContactForm()" 
+      *ngIf="!showAddForm && !showEditForm"
+      [disabled]="isLoading"
+    >
+      + Add Contact
+    </button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Add/Edit Contact Form -->
+  <div class="contact-form-container" *ngIf="showAddForm || showEditForm">
+    <div class="form-header">
+      <h3>{{ showAddForm ? 'Add New Contact' : 'Edit Contact' }}</h3>
+      <button class="close-form-btn" (click)="closeForm()" [disabled]="isLoading" title="Close form">
+        ✕
+      </button>
+    </div>
+    
+    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          placeholder="Enter contact name"
+          class="form-control"
+          [class.invalid]="name?.invalid && name?.touched"
+        />
+        <div class="error-message" *ngIf="name?.invalid && name?.touched">
+          <div *ngIf="name?.errors?.['required']">Name is required</div>
+          <div *ngIf="name?.errors?.['minlength']">Name must be at least 2 characters</div>
+        </div>
+      </div>
+
+      <!-- Email Addresses -->
+      <div class="form-group">
+        <label>Email Addresses *</label>
+        <small class="field-info">Click "+ Add Another Email" to add more</small>
+        <div formArrayName="emailAddresses">
+          <div 
+            *ngFor="let emailControl of emailControls; let i = index" 
+            class="email-field-group"
+          >
+            <div [formGroupName]="i" class="email-input-wrapper">
+              <span class="email-label">Email {{ i + 1 }}</span>
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="email@example.com"
+                class="form-control email-input"
+                [class.invalid]="emailControl.get('email')?.invalid && emailControl.get('email')?.touched"
+                [class.duplicate]="isDuplicateEmail(emailControl.get('email')?.value, i)"
+                (blur)="checkEmailDuplicate(emailControl.get('email')?.value, i)"
+              />
+              <button 
+                type="button" 
+                class="remove-email-btn"
+                (click)="removeEmailField(i)"
+                [disabled]="emailFormArray.length <= 1 || isLoading"
+                title="Remove this email"
+              >
+                −
+              </button>
+            </div>
+            <div class="error-message" *ngIf="emailControl.get('email')?.invalid && emailControl.get('email')?.touched">
+              <div *ngIf="emailControl.get('email')?.errors?.['required']">
+                Email is required
+              </div>
+              <div *ngIf="emailControl.get('email')?.errors?.['email']">
+                Please enter a valid email address
+              </div>
+              <div *ngIf="isDuplicateEmail(emailControl.get('email')?.value, i)" class="duplicate-warning">
+                This email is a duplicate within this contact
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button 
+          type="button" 
+          class="add-email-btn" 
+          (click)="addEmailField()"
+          [disabled]="isLoading"
+        >
+          + Add Another Email
+        </button>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          class="btn-primary" 
+          [disabled]="contactForm.invalid || isLoading"
+        >
+          <span *ngIf="isLoading">Processing...</span>
+          <span *ngIf="!isLoading">{{ showAddForm ? 'Add Contact' : 'Update Contact' }}</span>
+        </button>
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          (click)="closeForm()"
+          [disabled]="isLoading"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contacts List -->
+  <div class="contacts-list" *ngIf="!showAddForm && !showEditForm && !isLoading">
+    <div *ngIf="contacts.length === 0" class="no-contacts">
+      <p>No contacts yet. Click "Add Contact" to get started.</p>
+    </div>
+
+    <div *ngFor="let contact of contacts" class="contact-card">
+      <div class="contact-info" (click)="showEditContactForm(contact)">
+        <div class="contact-header">
+          <div class="contact-name">{{ contact.name }}</div>
+          <div class="email-count">
+            {{ contact.emailAddresses.length }} email{{ contact.emailAddresses.length !== 1 ? 's' : '' }}
+          </div>
+        </div>
+        <div class="contact-emails">
+          <span *ngFor="let email of contact.emailAddresses" class="email-tag">
+            {{ email }}
+          </span>
+        </div>
+      </div>
+      <button 
+        class="delete-contact-btn"
+        (click)="deleteContact(contact.id!, $event)"
+        title="Delete contact"
+        [disabled]="isLoading"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+</div>

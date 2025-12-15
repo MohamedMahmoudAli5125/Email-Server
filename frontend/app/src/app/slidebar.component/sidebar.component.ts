@@ -95,7 +95,8 @@ export class SidebarComponent implements OnInit {
   }
 
   goToContacts() {
-    this.router.navigate(['/mail/contacts']);
+    console.log("Navigating to contacts");
+    this.router.navigate(['/contacts']);
   }
 
   toggleCompose() {
