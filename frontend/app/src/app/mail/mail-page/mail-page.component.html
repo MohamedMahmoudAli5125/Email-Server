@@ -19,7 +19,6 @@
 
         <div class="toolbar-buttons">
           <span class="navigation-status">{{ navigationStatus }}</span>
-          
           <button 
             class="toolbar-btn" 
             (click)="navigateEmail('prev')" 
@@ -38,19 +37,19 @@
           
           <div class="separator"></div>
           
-          <button class="toolbar-btn" (click)="archiveEmail()">
+          <button class="toolbar-btn" (click)="archiveEmail($event)" >
             <span>📦</span>
             <span>{{ currentEmail?.archived ? 'Unarchive' : 'Archive' }}</span>
           </button>
           
           <button 
             class="toolbar-btn" 
-            (click)="(folderId === 'trash' || currentFolderName === 'Trash') ? permanentlyDeleteEmail() : deleteEmail()">
+            (click)="(folderId === 'trash' || currentFolderName === 'Trash') ? permanentlyDeleteEmail($event) : deleteEmail($event)">
             <span>🗑️</span>
-            <span>{{ (folderId === 'trash' || currentFolderName === 'Trash') ? 'Delete Permanently' : 'Delete' }}</span>
+            <span>Delete</span>
           </button>
           
-          <button class="toolbar-btn" (click)="markAsUnread()">
+          <button class="toolbar-btn" (click)="markAsUnread($event)">
             <span>✉️</span>
             <span>Mark as unread</span>
           </button>
@@ -58,7 +57,7 @@
           <div class="move-dropdown-wrapper">
             <button 
               class="toolbar-btn" 
-              (click)="moveTo()"
+              (click)="moveTo($event)"
               [disabled]="!currentEmail || movingEmail">
               <span>📁</span>
               <span>Move to</span>
@@ -73,7 +72,7 @@
                 <div 
                   *ngFor="let folder of getAvailableFolders()" 
                   class="move-dropdown-item"
-                  (click)="moveEmailToFolder(folder.id)">
+                  (mousedown)="moveEmailToFolder(folder.id, $event)">
                   <span class="folder-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>

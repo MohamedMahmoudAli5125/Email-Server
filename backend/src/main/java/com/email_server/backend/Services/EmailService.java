@@ -36,7 +36,7 @@ import com.email_server.backend.Repositories.FolderRepository;
 public class EmailService {
 
 
- 
+
     private final EmailRepository emailRepository;
     private final FolderService folderService;
     private final UserRepository userRepository;
@@ -52,7 +52,7 @@ public class EmailService {
                        UserRepository userRepository,
                         EmailFilterService emailFilterService,
                         FolderRepository folderRepository
-                       
+
                       ) {
         this.emailRepository = emailRepository;
         this.folderService = folderService;
@@ -66,7 +66,7 @@ public class EmailService {
 
 
 
-// UserId of who make send 
+// UserId of who make send
   @Transactional
     public Email sendEmail(String userId, EmailDTO emailDTO) {
         System.out.println(".");
@@ -77,8 +77,8 @@ public class EmailService {
 
 
 
-// here must make validation those to list are exitst 
-// then put in queue whihc in worker it will make enqueue and call sendEmail and put it userId ,EmailDTO 
+// here must make validation those to list are exitst
+// then put in queue whihc in worker it will make enqueue and call sendEmail and put it userId ,EmailDTO
 // Build email using Builder Pattern
         Email email = Email.builder()
                 .fromEmail(emailDTO.getFromEmail())
@@ -102,7 +102,7 @@ public class EmailService {
 
 
 //        List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
-        
+
 
 //        // Build email using Builder Pattern
 //        Email email = Email.builder()
@@ -114,31 +114,31 @@ public class EmailService {
 //                .sentDate(LocalDateTime.now())
 //                .attachments(attachments)
 //                .build();
-        
-        // Save to sender's SENT folder by get the folder of of the user by userId and Type 
+
+        // Save to sender's SENT folder by get the folder of of the user by userId and Type
 //        Folder sentFolder = folderService.getUserFolderByType(userId, FolderType.SENT);
 //        email.setFolder(sentFolder);
 //        // save email
 //        Email savedEmail = emailRepository.save(email);
-        
+
         // Use Queue for multiple recipients (Singleton Pattern)
         queueManager.enqueue(savedEmail);
         processEmailQueue(savedEmail);
-        
+
         return savedEmail;
     }
-    
+
     private void processEmailQueue(Email email) {
         Email queuedEmail = queueManager.dequeue();
-        
-        // Send to all recipients 
+
+        // Send to all recipients
 Queue<String> allRecipients = new LinkedList<>();
 
         allRecipients.addAll(queuedEmail.getToList());
         // allRecipients.addAll(queuedEmail.getCcList());
         // allRecipients.addAll(queuedEmail.getBccList());
-        
-        // we want queue not list 
+
+        // we want queue not list
 while(!allRecipients.isEmpty()){
     String recipientEmail=allRecipients.poll();
                 deliverEmailToRecipient(queuedEmail, recipientEmail);
@@ -153,7 +153,7 @@ while(!allRecipients.isEmpty()){
 
 
     }
-    
+
     @Transactional
     private void deliverEmailToRecipient(Email originalEmail, String recipientEmail) {
         // Find recipient user
@@ -161,28 +161,28 @@ while(!allRecipients.isEmpty()){
             // Create copy for recipient
             Email recipientEmail1 = copyEmail(originalEmail);
             recipientEmail1.setRead(false);
-            
+
             // Apply filters
             // Folder targetFolder = filterService.applyFilters(recipient.getId(), recipientEmail1);
             // Folder targetFolder =new;
             // if (targetFolder == null) {
             Folder targetFolder=folderService.getUserFolderByType(recipient.getId(), FolderType.INBOX);
-                
+
             // }
             // add to this folder the new email before save it  but according to relations will add automatic
             // targetFolder.getEmails().add(recipientEmail1);
             recipientEmail1.setFolder(targetFolder);
             emailRepository.save(recipientEmail1);
             // use of observer design pattern here by using socket be here  #################
-           
+
 
 
         });
     }
-    
+
     private Email copyEmail(Email original) {
-         List<Attachment> copiedAttachments = original.getAttachments() != null 
-        ? new ArrayList<>(original.getAttachments()) 
+         List<Attachment> copiedAttachments = original.getAttachments() != null
+        ? new ArrayList<>(original.getAttachments())
         : new ArrayList<>();
         return  Email.builder()
                  .fromEmail(original.getFromEmail())
@@ -201,7 +201,7 @@ while(!allRecipients.isEmpty()){
  @Transactional
     public Email saveDraft(String userId, EmailDTO emailDTO) {
         List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
-        
+
         Email draft = Email.builder()
                 .fromEmail(emailDTO.getFromEmail())
                 .toList(emailDTO.getTo())
@@ -213,26 +213,26 @@ while(!allRecipients.isEmpty()){
                 .isDraft(true)
                 .attachments(attachments)
                 .build();
-        
+
         Folder draftFolder = folderService.getUserFolderByType(userId, FolderType.DRAFT);
         draft.setFolder(draftFolder);
-        
+
         return emailRepository.save(draft);
     }
-    
+
     @Transactional
     public Email updateDraft(String draftId, EmailDTO emailDTO) {
         Email draft = getEmailById(draftId);
-        
+
         if (!draft.isDraft()) {
             throw new RuntimeException("Email is not a draft");
         }
-        
+
         draft.setToList(emailDTO.getTo());
         draft.setSubject(emailDTO.getSubject());
         draft.setBody(emailDTO.getBody());
         draft.setPriority(emailDTO.getPriority() != null ? emailDTO.getPriority() : EmailPriority.NORMAL);
-        
+
         return emailRepository.save(draft);
     }
 
@@ -244,27 +244,27 @@ while(!allRecipients.isEmpty()){
     }
 
 
-// still there is one get by sort by priority 
+// still there is one get by sort by priority
 
-// now what rest is this and filters validate senter present in start of send  
-// and make filter of results of search by using Specification so we make Builder and Factory and filter and chainOfRensoplity for validation 
+// now what rest is this and filters validate senter present in start of send
+// and make filter of results of search by using Specification so we make Builder and Factory and filter and chainOfRensoplity for validation
 // Singlton and will add Observer as bonus  for websocket
 
 
 
-// to get one by its id 
+// to get one by its id
  public Email getEmailById(String emailId) {
         return emailRepository.findById(emailId)
                 .orElseThrow(() -> new RuntimeException("Email not found"));
     }
-    // bonus 
+    // bonus
     @Transactional
     public Email markAsRead(String emailId) {
         Email email = getEmailById(emailId);
         email.setRead(true);
         return emailRepository.save(email);
     }
-    
+
     // bonus
     @Transactional
     public Email markAsUnread(String emailId) {
@@ -272,8 +272,8 @@ while(!allRecipients.isEmpty()){
         email.setRead(false);
         return emailRepository.save(email);
     }
-    
-    // bounus what make this is the user not sender 
+
+    // bounus what make this is the user not sender
     @Transactional
     public Email toggleImportant(String emailId) {
         Email email = getEmailById(emailId);
@@ -288,7 +288,7 @@ while(!allRecipients.isEmpty()){
         email.setFolder(targetFolder);
         emailRepository.save(email);
     }
-    
+
     // move many
     @Transactional
     public void moveEmails(List<String> emailIds, String targetFolderId) {
@@ -299,8 +299,8 @@ while(!allRecipients.isEmpty()){
             emailRepository.save(email);
         }
     }
-    // delte one 
-    // not permanent 
+    // delte one
+    // not permanent
     @Transactional
     public void deleteEmail(String emailId, String userId) {
         Email email = getEmailById(emailId);
@@ -309,15 +309,15 @@ while(!allRecipients.isEmpty()){
         emailRepository.save(email);
     }
 
-    // delete from trash final 
-    
+    // delete from trash final
+
     @Transactional
     public void deletePermanently(String emailId) {
         emailRepository.deleteById(emailId);
     }
 
-    // delte many not final just 
-    
+    // delte many not final just
+
     @Transactional
     public void deleteMultipleEmails(List<String> emailIds, String userId) {
         Folder trashFolder = folderService.getUserFolderByType(userId, FolderType.TRASH);
@@ -335,10 +335,10 @@ while(!allRecipients.isEmpty()){
            this.deletePermanently(emailId);
         }
     }
-    
 
-    // this bounus 
-    
+
+    // this bounus
+
     public long getUnreadCount(String folderId) {
         return emailRepository.countByFolderIdAndIsReadFalse(folderId);
     }
@@ -479,6 +479,6 @@ while(!allRecipients.isEmpty()){
 
 
 
-    
+
 }
 

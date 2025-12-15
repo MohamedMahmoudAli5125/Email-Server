@@ -1,74 +1,74 @@
-//package Email_server.Backend.services;
+////package Email_server.Backend.services;
+////
+////import org.springframework.stereotype.Service;
+////import org.springframework.transaction.annotation.Transactional;
+////
+////import Email_server.Backend.Dto.UserDTO;
+////import Email_server.Backend.Entities.User;
+////import Email_server.Backend.Repositories.UserRepository;
+////import Email_server.Backend.patterns.Factory;
 //
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
 //
-//import Email_server.Backend.Dto.UserDTO;
-//import Email_server.Backend.Entities.User;
-//import Email_server.Backend.Repositories.UserRepository;
-//import Email_server.Backend.patterns.Factory;
-
-
-// @Service
-// public class UserService {
-//      private final UserRepository userRepository;
-    
-//     public UserService(UserRepository userRepository) {
-//         this.userRepository = userRepository;
-//     }
-//     // chenck not exist before 
-//     // build user 
-//     // in user in dto we make @Email which is validation 
-//     @Transactional
-//     public User registerUser(UserDTO userDTO) {
-//         if (userRepository.existsByEmail(userDTO.getEmail())) {
-//             throw new RuntimeException("Email already exists");
-//         }
-//         // we make users without decode the passwords 
-//         User user = User.builder()
-//                 .email(userDTO.getEmail())
-//                 .name(userDTO.getName())
-//                 .password(userDTO.getPassword()) 
-//                 .build();
-//         // inbox trash ..............
-//         Factory.createDefaultFolders(user);
-        
-//         return userRepository.save(user);
-//     }
-//     // login first 
-//     public User login(String email, String password) {
-//         User user = userRepository.findByEmail(email)
-//                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-        
-//         if (!user.getPassword().equals(password)) {
-//             throw new RuntimeException("Invalid credentials");
-//         }
-        
-//         return user;
-//     }
-
-
-    
-//     public User getUserById(String userId) {
-//         return userRepository.findById(userId)
-//                 .orElseThrow(() -> new RuntimeException("User not found"));
-//     }
-    
-//     public User getUserByEmail(String email) {
-//         return userRepository.findByEmail(email)
-//                 .orElseThrow(() -> new RuntimeException("User not found"));
-//     }
-    
-
-//     @Transactional
-//     public User updateUser(String userId, UserDTO userDTO) {
-//         User user = getUserById(userId);
-//         user.setName(userDTO.getName());
-//         return userRepository.save(user);
-//     }
-
-// }
-
+//// @Service
+//// public class UserService {
+////      private final UserRepository userRepository;
+//
+////     public UserService(UserRepository userRepository) {
+////         this.userRepository = userRepository;
+////     }
+////     // chenck not exist before
+////     // build user
+////     // in user in dto we make @Email which is validation
+////     @Transactional
+////     public User registerUser(UserDTO userDTO) {
+////         if (userRepository.existsByEmail(userDTO.getEmail())) {
+////             throw new RuntimeException("Email already exists");
+////         }
+////         // we make users without decode the passwords
+////         User user = User.builder()
+////                 .email(userDTO.getEmail())
+////                 .name(userDTO.getName())
+////                 .password(userDTO.getPassword())
+////                 .build();
+////         // inbox trash ..............
+////         Factory.createDefaultFolders(user);
+//
+////         return userRepository.save(user);
+////     }
+////     // login first
+////     public User login(String email, String password) {
+////         User user = userRepository.findByEmail(email)
+////                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+//
+////         if (!user.getPassword().equals(password)) {
+////             throw new RuntimeException("Invalid credentials");
+////         }
+//
+////         return user;
+////     }
+//
+//
+//
+////     public User getUserById(String userId) {
+////         return userRepository.findById(userId)
+////                 .orElseThrow(() -> new RuntimeException("User not found"));
+////     }
+//
+////     public User getUserByEmail(String email) {
+////         return userRepository.findByEmail(email)
+////                 .orElseThrow(() -> new RuntimeException("User not found"));
+////     }
+//
+//
+////     @Transactional
+////     public User updateUser(String userId, UserDTO userDTO) {
+////         User user = getUserById(userId);
+////         user.setName(userDTO.getName());
+////         return userRepository.save(user);
+////     }
+//
+//// }
+//
 // UserService.java
 package com.email_server.backend.Services;
 

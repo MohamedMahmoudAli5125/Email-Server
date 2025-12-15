@@ -25,7 +25,7 @@ export class HomePage {
   onEmailOpened(event: { emailId: string; folderId: string }) {
     console.log("ok");
     // Navigate to mail-page component with both IDs
-    this.router.navigate(['/mailpage', event.folderId, event.emailId]);
+    this.router.navigate(['/mail', event.folderId, event.emailId]);
 
     // OR if you're using a modal/overlay approach:
     // this.openMailPage(event.emailId, event.folderId);

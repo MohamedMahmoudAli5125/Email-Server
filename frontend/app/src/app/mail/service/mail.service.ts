@@ -168,6 +168,7 @@ export class MailService {
           // Normalize email data
           const normalizedContent = response.content.map(email => ({
             ...email,
+            isRead: email.read,
             to: email.toList || email.to || [],
             cc: email.cc || [],
             bcc: email.bcc || [],
