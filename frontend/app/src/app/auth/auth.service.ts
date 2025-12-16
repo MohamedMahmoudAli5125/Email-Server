@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { User } from '../models/user'; 
 
 @Injectable({
@@ -55,4 +56,62 @@ export class AuthService {
       localStorage.removeItem('userName');
     }
   }
+
+
+
+  
+    getProfile(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/profile/${userId}`);
+  }
+ updateProfile(userId: string, updateData: {name?: string, password?: string}): Observable<any> {
+    return this.http.put(`${this.apiUrl}/profile/${userId}`, updateData).pipe(
+      tap(res => {
+        // Update local storage if name was changed
+        if (updateData.name) {
+          localStorage.setItem('userName', updateData.name);
+        }
+      })
+    );
+  }
+  deleteAccount(userId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/profile/${userId}`);
+  }
+  private storeUserData(user: User): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('userId', user.id);
+      localStorage.setItem('userEmail', user.email);
+      localStorage.setItem('userName', user.name);
+    }
+  }
+  getCurrentUser(): User | null {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const userId = localStorage.getItem('userId');
+      const userEmail = localStorage.getItem('userEmail');
+      const userName = localStorage.getItem('userName');
+      
+      if (userId && userEmail && userName) {
+        return {
+          id: userId,
+          email: userEmail,
+          name: userName,
+          password: '' // Password not stored locally
+        };
+      }
+    }
+    return null;
+  }
+  updateLocalStorage(userData: {id?: string, email?: string, name?: string}): void {
+    if (typeof localStorage !== 'undefined') {
+      if (userData.id) {
+        localStorage.setItem('userId', userData.id);
+      }
+      if (userData.email) {
+        localStorage.setItem('userEmail', userData.email);
+      }
+      if (userData.name) {
+        localStorage.setItem('userName', userData.name);
+      }
+    }
+  }
+
 }

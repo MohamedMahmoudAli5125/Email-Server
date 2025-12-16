@@ -5,12 +5,14 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Folder } from '../models/folder';
 import { FolderService } from '../Services/folderService';
+import { ProfileComponent } from '../auth/profile-component/profile.component';
+import { AuthService } from '../auth/auth.service';
 
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProfileComponent],
   templateUrl: './slidebar.component.html',
   styleUrls: ['./slidebar.component.css']
 })
@@ -19,6 +21,9 @@ export class SidebarComponent implements OnInit {
   folders: Folder[] = [];
   showNewFolder = false;
   newFolderName = '';
+    showProfile: boolean = false;
+
+  currentUser: any = null;
 
   @Output() folderSelected = new EventEmitter<string>();
   @Output() toggleComposeSignal = new EventEmitter<void>();
@@ -26,12 +31,16 @@ export class SidebarComponent implements OnInit {
   constructor(
     private folderService: FolderService,
     private router: Router,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+        private authService: AuthService // Inject AuthService
+
   ) { }
 
 
   ngOnInit() {
     this.loadFolders();
+    this.currentUser = this.authService.getCurrentUser();
+    this.cd.detectChanges();
   }
 
 
@@ -101,5 +110,22 @@ export class SidebarComponent implements OnInit {
 
   toggleCompose() {
     this.toggleComposeSignal.emit();
+  }
+   toggleProfile(): void {
+    this.showProfile = !this.showProfile;
+    this.cd.detectChanges();
+  }
+   closeProfile(): void {
+    this.showProfile = false;
+    this.cd.detectChanges();
+  }
+  onProfileUpdated(): void {
+    // Reload the user data from localStorage after profile update
+    this.currentUser = this.authService.getCurrentUser();
+    
+    // Force UI update
+    this.cd.detectChanges();
+    
+    console.log('Profile updated - user data refreshed');
   }
 }

@@ -69,4 +69,22 @@
       <span class="label-name">Contacts</span>
     </div>
   </div>
+  <div class="sidebar-footer">
+     <app-profile 
+      [compactView]="true"
+      (compactClick)="toggleProfile()"
+      [user]="currentUser"
+    ></app-profile>
+    
+    <!-- Profile Modal -->
+    <div *ngIf="showProfile" class="profile-modal-overlay" (click)="closeProfile()">
+      <div class="profile-modal-content" (click)="$event.stopPropagation()">
+        <app-profile 
+          [compactView]="false" 
+          (closeProfile)="closeProfile()"
+          (profileUpdated)="onProfileUpdated()"
+        ></app-profile>
+      </div>
+    </div>
+  </div>
 </div>
