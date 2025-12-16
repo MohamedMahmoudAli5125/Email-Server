@@ -176,17 +176,17 @@ public class AttachmentController {
             }
 
             // If only one attachment, download it directly
-            if (attachments.size() == 1) {
-                Attachment attachment = attachments.get(0);
-                byte[] fileData = attachmentService.getAttachmentFile(attachment.getId());
-                ByteArrayResource resource = new ByteArrayResource(fileData);
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(attachment.getFileType()))
-                        .header(HttpHeaders.CONTENT_DISPOSITION,
-                                "attachment; filename=\"" + attachment.getFileName() + "\"")
-                        .body(resource);
-            }
+//            if (attachments.size() == 1) {
+//                Attachment attachment = attachments.get(0);
+//                byte[] fileData = attachmentService.getAttachmentFile(attachment.getId());
+//                ByteArrayResource resource = new ByteArrayResource(fileData);
+//
+//                return ResponseEntity.ok()
+//                        .contentType(MediaType.parseMediaType(attachment.getFileType()))
+//                        .header(HttpHeaders.CONTENT_DISPOSITION,
+//                                "attachment; filename=\"" + attachment.getFileName() + "\"")
+//                        .body(resource);
+//            }
 
             // For multiple attachments, create a ZIP file
             byte[] zipData = attachmentService.createZipOfAttachments(emailId);

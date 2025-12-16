@@ -49,7 +49,7 @@ export class MailPageComponent implements OnInit {
   showFeedback: boolean = false;
   
   // Download states
-  downloadingAttachments: Set<string> = new Set();
+  // downloadingAttachments: Set<string> = new Set();
   downloadingAll: boolean = false;
   folders: Folder[] = [];
   showMoveDropdown = false;
@@ -65,7 +65,6 @@ export class MailPageComponent implements OnInit {
     private emailservice: EmailService
   ) {}
 
-  // Add global click listener to close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -448,18 +447,18 @@ export class MailPageComponent implements OnInit {
   downloadAttachment(attachment: Attachment) {
     if (!this.currentEmail?.id) return;
     
-    this.downloadingAttachments.add(attachment.id);
+    // this.downloadingAttachments.add(attachment.id);
     
     this.mailService.downloadAttachment(this.currentEmail.id, attachment.id)
       .subscribe({
         next: (blob) => {
           this.saveBlob(blob, attachment.fileName);
-          this.downloadingAttachments.delete(attachment.id);
+          // this.downloadingAttachments.delete(attachment.id);
           this.showActionFeedback(`Downloaded ${attachment.fileName}`);
         },
         error: (error) => {
           console.error('Error downloading attachment:', error);
-          this.downloadingAttachments.delete(attachment.id);
+          // this.downloadingAttachments.delete(attachment.id);
           this.showActionFeedback('Failed to download attachment');
         }
       });
@@ -500,9 +499,9 @@ export class MailPageComponent implements OnInit {
     return this.mailService.getAttachmentUrl(this.currentEmail.id, attachment.id);
   }
 
-  isDownloading(attachmentId: string): boolean {
-    return this.downloadingAttachments.has(attachmentId);
-  }
+  // isDownloading(attachmentId: string): boolean {
+  //   return this.downloadingAttachments.has(attachmentId);
+  // }
 
   getAttachmentIcon(fileType: string): string {
     if (fileType.startsWith('image/')) return '🖼️';
