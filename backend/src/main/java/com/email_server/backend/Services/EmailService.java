@@ -181,20 +181,35 @@ while(!allRecipients.isEmpty()){
     }
 
     private Email copyEmail(Email original) {
-         List<Attachment> copiedAttachments = original.getAttachments() != null
-        ? new ArrayList<>(original.getAttachments())
-        : new ArrayList<>();
-        return  Email.builder()
-                 .fromEmail(original.getFromEmail())
+        // Deep copy attachments
+        List<Attachment> copiedAttachments = new ArrayList<>();
+        if (original.getAttachments() != null) {
+            for (Attachment originalAttachment : original.getAttachments()) {
+                Attachment newAttachment = new Attachment();
+                newAttachment.setFileName(originalAttachment.getFileName());
+                newAttachment.setFileType(originalAttachment.getFileType());
+                newAttachment.setFileSize(originalAttachment.getFileSize());
+                // Don't set the email here - it will be set automatically when saved
+                copiedAttachments.add(newAttachment);
+            }
+        }
+
+        Email copiedEmail = Email.builder()
+                .fromEmail(original.getFromEmail())
                 .toList(new ArrayList<>(original.getToList()))
-                // .cc(original.getCcList())
-                // .bcc(original.getBccList())
                 .subject(original.getSubject())
                 .body(original.getBody())
                 .priority(original.getPriority())
                 .sentDate(original.getSentDate())
                 .attachments(copiedAttachments)
                 .build();
+
+        // Set bidirectional relationship
+        for (Attachment attachment : copiedAttachments) {
+            attachment.setEmail(copiedEmail);
+        }
+
+        return copiedEmail;
     }
 
 
