@@ -105,7 +105,7 @@ export class EmailList implements OnChanges {
     this.currentFolderId = this.folderId;
     this.isSearching = false;
     
-    this.emailService.getEmails(this.currentFolderId, 0, 20).subscribe({
+    this.emailService.getEmails(this.currentFolderId, this.currentPage, 20).subscribe({
       next: (response: any) => {
         this.emails = response.content;
         this.totalPages = response.totalPages || 0;
@@ -388,4 +388,5 @@ export class EmailList implements OnChanges {
   getAvailableFolders() {
     return this.folderService.folders.filter(f => f.id !== this.currentFolderId);
   }
+
 }
