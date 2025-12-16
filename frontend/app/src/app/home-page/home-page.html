@@ -1,11 +1,12 @@
 
 <div class="layout">
   <app-sidebar  
-  (folderSelected)="onFolderChange($event)" 
+  (folderSelected)="onFolderChange($event)"
   (toggleComposeSignal)="toggleCompose()"
+  (folderTypeSignal)="setFolderType($event)"
   ></app-sidebar>
-  <app-email-list  [folderId]="currentFolderId"
+  <app-email-list (openCompose)="openDraftEmail($event)" [folderType]="folderType" [folderId]="currentFolderId"
   (emailOpened)="onEmailOpened($event)"></app-email-list>
-  <app-compose-box [showCompose]="showCompose"></app-compose-box>
+  <app-compose-box [isDraft]="isDraft" (closeCompose)="toggleCompose()" [currentEmail]="currentDraftEmail" style="z-index: 200;" [showCompose]="showCompose"></app-compose-box>
 
 </div>

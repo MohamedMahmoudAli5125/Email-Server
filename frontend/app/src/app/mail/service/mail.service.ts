@@ -218,4 +218,17 @@ export class MailService {
   getAttachmentPreviewUrl(emailId: string, attachmentId: string): string {
     return `${this.apiUrl}/${emailId}/attachments/${attachmentId}/preview`;
   }
+
+  moveToTrash(emailId: string) {
+    const encodedEmailId = encodeURI(emailId);
+    const encodedUserId = encodeURI(localStorage.getItem('userId')!);
+
+    return this.http.delete(`${this.apiUrl}/${encodedEmailId}?userId=${encodedUserId}`)
+  }  
+
+  deletePemanently(emailId: string) {
+    const encoded = encodeURI(emailId)
+
+    return this.http.delete(`${this.apiUrl}/${encoded}/permanent`)
+  }
 }

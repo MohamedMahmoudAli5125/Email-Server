@@ -4,7 +4,7 @@
 
 <div class="sidebar">
   <!-- Compose Button -->
-  <button (click)="toggleCompose()" class="compose-btn" (click)="navigateToFolder('')">
+  <button (click)="toggleCompose()" class="compose-btn">
     <span class="compose-icon">✏️</span>
     <span class="compose-text">Compose</span>
   </button>
@@ -14,7 +14,7 @@
     <div 
       *ngFor="let folder of folders"
       class="folder-item"
-      (click)="navigateToFolder(folder.id)"
+      (click)="navigateToFolder(folder.id, folder.type)"
     >
       <span class="folder-icon">
         {{ folder.type === 'INBOX' ? '📥' : 

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Injectable, Input } from '@angular/core';
+import { Component, EventEmitter, Injectable, Input, Output, SimpleChanges } from '@angular/core';
 import { Form, FormsModule, NgForm } from '@angular/forms';
-import { Email } from '../../models/email';
+import { Attachment, Email } from '../../models/email';
 import { AuthService } from '../../auth/auth.service';
 import { EmailPriority } from '../../models/enums';
 import { setPriority } from 'os';
@@ -15,24 +15,44 @@ import { MailService } from '../service/mail.service';
   styleUrl: './compose-box.css',
 })
 export class ComposeBox {
-  files: File[] = []
-  priorities: string[] = ['Normal', 'High', 'Urgent', 'Low']
-  attachments: File[] = []
+
+  priorities: string[] = ['Normal', 'High', 'Urgent', 'Low'];
   @Input() showCompose = false;
+  @Input() currentEmail!: Email;
+  @Input() isDraft!: boolean;
+  @Output() closeCompose = new EventEmitter<void>();
+  composeEmail!: Email;
+  toInput: string = '';
+  priority = 'Normal';
+  attachments: Attachment[] = [];
 
   constructor(private authService: AuthService, private mailService: MailService) { }
 
+  ngOnChanges(changes: SimpleChanges) {
+
+    if (changes['currentEmail']?.currentValue) {
+      const email = changes['currentEmail'].currentValue;
+
+      this.composeEmail = structuredClone(email);
+      this.toInput = (email.toList ?? []).join(', ');
+      this.priority = this.getPriorityAsString();
+      this.attachments = (email.attachments ?? []).map(
+        (a: Attachment) => ({ name: a.fileName })
+      );
+      console.log(this.attachments)
+    }
+    if (changes['showCompose'] && changes['showCompose']?.currentValue == false) {
+      this.composeEmail = this.clearEmail();
+      this.toInput = ''
+      this.priority = 'Normal';
+    }
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.files = Array.from(input.files);
-      console.log(this.files)
-      for (let i = 0; i < input.files.length; i++) {
-        this.attachments.push(input.files[i]);
-      }
+    if (!input.files) return;
 
-      input.value = '';
-    }
+    this.composeEmail.attachmentFiles!.push(...Array.from(input.files));
   }
 
   sendEmail(emailForm: NgForm) {
@@ -43,7 +63,19 @@ export class ComposeBox {
 
     this.mailService.sendMail(formData).subscribe({
       next: (res: any) => {
-        console.log('Email sent successfully:', res);
+        alert('Email sent successfully');
+        console.log(res)
+        this.onCloseCompose();
+        if (this.isDraft) {
+          this.mailService.deletePemanently(this.composeEmail.id).subscribe({
+            next: (res) => {
+              console.log("draft deleted.")
+            },
+            error: (err) => {
+              console.log(err)
+            }
+          })
+        }
       },
       error: (err) => {
         console.log('Error sending email:', err);
@@ -57,6 +89,7 @@ export class ComposeBox {
 
     this.mailService.draftMail(formData).subscribe({
       next: (res: Email) => {
+        alert('Email sent successfully');
         console.log(res)
       },
       error: (err) => {
@@ -81,14 +114,14 @@ export class ComposeBox {
   makeMailForm(emailForm: NgForm) {
 
     const email: Email = {
-      fromEmail: this.authService.currentUser.email,
+      fromEmail: localStorage.getItem('userEmail')!,
       to: emailForm.value.to.split(',').map((x: string) => x.trim()),
       cc: emailForm.value.cc ? emailForm.value.cc.split(',').map((x: string) => x.trim()) : [],
       bcc: emailForm.value.bcc ? emailForm.value.bcc.split(',').map((x: string) => x.trim()) : [],
       subject: emailForm.value.subject,
       body: emailForm.value.body,
       priority: this.setPriority(emailForm.value.priority),
-      attachmentFiles: this.files || [],
+      attachmentFiles: this.composeEmail.attachmentFiles || [],
       id: '',
       toList: [],
       sentDate: '',
@@ -99,7 +132,7 @@ export class ComposeBox {
 
     const formData = new FormData();
 
-    formData.append('userId', this.authService.currentUser.id);
+    formData.append('userId', localStorage.getItem('userId')!);
     formData.append('fromEmail', email.fromEmail);
     formData.append('to', (email.to ?? []).join(','));
     formData.append('cc', (email.cc ?? []).join(','));
@@ -116,6 +149,43 @@ export class ComposeBox {
   }
 
   removeAttachment(index: number) {
-    this.attachments.splice(index, 1);
+    this.currentEmail.attachmentFiles!.splice(index, 1);
+  }
+
+  clearEmail(): Email {
+    return {
+      id: '',
+      fromEmail: '',
+      to: [],
+      toList: [],
+      cc: [],
+      bcc: [],
+      subject: '',
+      body: '',
+      priority: EmailPriority.NORMAL,
+      attachmentFiles: [],
+      attachments: [],
+      sentDate: '',
+      isRead: false,
+      archived: false,
+      isImportant: false
+    };
+  }
+
+  getPriorityAsString() {
+    switch (this.composeEmail.priority) {
+      case EmailPriority.HIGH:
+        return 'High';
+      case EmailPriority.URGENT:
+        return 'Urgent';
+      case EmailPriority.LOW:
+        return 'Low';
+      default:
+        return 'Normal';
+    }
+  }
+
+  onCloseCompose() {
+    this.closeCompose.emit();
   }
 }

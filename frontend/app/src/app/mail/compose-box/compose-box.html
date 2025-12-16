@@ -1,25 +1,30 @@
 <div *ngIf="showCompose" class="mail-container">
-
-    <form #emailForm="ngForm" class="main">
+    <button type="button" class="close-btn" (click)="onCloseCompose()">×</button>
+    <form #emailForm="ngForm" class="main" (ngSubmit)="sendEmail(emailForm)">
         <div class="upper-section">
-            <input ngModel class="receiver-input compose-input" type="text" placeholder="To" name="to">
-            <input ngModel class="subject-input compose-input" type="text" placeholder="Subject" name="subject">
+            <input [(ngModel)]="toInput" class="receiver-input compose-input" type="text" placeholder="To" name="to">
+            <input [(ngModel)]="composeEmail.subject" class="subject-input compose-input" type="text"
+                placeholder="Subject" name="subject">
         </div>
         <div class="lower-section">
-            <textarea ngModel class="body-input" name="body" id="" placeholder="Body"></textarea>
+            <textarea [(ngModel)]="composeEmail.body" class="body-input" name="body" id=""
+                placeholder="Body"></textarea>
             <input class="file-input" name="files" (change)="onFileSelected($event)" type="file" multiple>
             <div class="attachments">
-                <div class="attachment" *ngFor="let file of attachments; let i = index">
+                <div class="attachment" *ngFor="let att of attachments">
+                    <span>{{ att.fileName }}</span>
+                </div>
+                <div class="attachment" *ngFor="let file of composeEmail.attachmentFiles; let i = index">
                     <span>{{ file.name }}</span>
                     <button type="button" (click)="removeAttachment(i)">×</button>
                 </div>
             </div>
             <div class="button-container">
-                <select ngModel name="priority" id="priority">
+                <select [(ngModel)]="composeEmail.priority" name="priority" id="priority">
                     <option *ngFor="let p of priorities" [value]="p.toUpperCase()">{{p}}</option>
                 </select>
-                <button class="draft" (click)="draftEmail(emailForm)">draft</button>
-                <button type="submit" (click)="sendEmail(emailForm)" class="send">Send</button>
+                <button type="button" class="draft" (click)="draftEmail(emailForm)">draft</button>
+                <button type="submit" class="send">Send</button>
             </div>
         </div>
     </form>

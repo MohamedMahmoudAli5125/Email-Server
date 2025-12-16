@@ -26,6 +26,7 @@ export class SidebarComponent implements OnInit {
   currentUser: any = null;
 
   @Output() folderSelected = new EventEmitter<string>();
+  @Output() folderTypeSignal = new EventEmitter<string>();
   @Output() toggleComposeSignal = new EventEmitter<void>();
 
   constructor(
@@ -55,10 +56,11 @@ export class SidebarComponent implements OnInit {
     );
   }
 
-  navigateToFolder(folderId: string) {
+  navigateToFolder(folderId: string, folderType: string) {
     console.log(folderId);
     // const name = folder.name.toLowerCase();
     // this.router.navigate([name]);
+    this.folderTypeSignal.emit(folderType);
     this.folderSelected.emit(folderId);
   }
 

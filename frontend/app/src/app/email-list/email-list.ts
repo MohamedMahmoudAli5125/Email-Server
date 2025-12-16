@@ -17,8 +17,11 @@ import { Router } from '@angular/router';
   styleUrl: './email-list.css',
 })
 export class EmailList implements OnChanges {
+
+  @Input() folderType = ''
   @Input() folderId!: string;
   @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string }>();
+  @Output() openCompose = new EventEmitter<Email>()
 
   emails: Email[] = [];
   loading = false;
@@ -249,8 +252,15 @@ export class EmailList implements OnChanges {
 
   openEmail(email: Email, event: Event) {
     const target = event.target as HTMLElement;
+    console.log("---------------------")
+    console.log(this.folderType)
     if (target.closest('.email-checkbox') || target.closest('.email-star')) {
       return;
+    }
+
+    if(email && this.folderType.toUpperCase() === 'DRAFT') {
+      this.openCompose.emit(email);
+      return
     }
 
     if (!email.isRead && email.id) {
