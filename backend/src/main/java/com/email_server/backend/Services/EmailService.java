@@ -328,6 +328,7 @@ while(!allRecipients.isEmpty()){
 
     @Transactional
     public void deletePermanently(String emailId) {
+
         emailRepository.deleteById(emailId);
     }
 

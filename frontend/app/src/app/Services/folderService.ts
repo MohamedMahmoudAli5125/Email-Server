@@ -1,9 +1,9 @@
 // ============================================
 // src/app/services/folder.service.ts - SIMPLE VERSION
 // ============================================
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { Folder } from '../models/folder';
 import { AuthService } from '../auth/auth.service';
 
@@ -14,6 +14,7 @@ import { AuthService } from '../auth/auth.service';
 export class FolderService {
   private apiUrl = 'http://localhost:8080/api/folders';
   folders: Folder[] = [];
+  foldersUpdated = new EventEmitter<void>();
 
   constructor(
     private http: HttpClient,
@@ -43,13 +44,28 @@ export class FolderService {
       return of({} as Folder); // Return empty folder observable
     }
     
-    return this.http.post<Folder>(`${this.apiUrl}/user/${userId}`, { name });
+    return this.http.post<Folder>(`${this.apiUrl}/user/${userId}`, { name }).pipe(
+       tap(newFolder => {
+        // Add the new folder to local array
+        this.folders = [...this.folders, newFolder];
+        // Emit update event
+        this.foldersUpdated.emit();
+        console.log('Folder created, emitting update');
+      })
+    ); 
   }
 
   // Delete folder
   deleteFolder(folderId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${folderId}`);
-  }
+    return this.http.delete(`${this.apiUrl}/${folderId}`).pipe(
+      tap(() => {
+     // Remove folder from local array
+        this.folders = this.folders.filter(f => f.id !== folderId);
+        // Emit update event
+        this.foldersUpdated.emit();
+        console.log('Folder deleted, emitting update');
+      })
+    );  }
 
   // Load and store folders
   loadFolders(): void {
@@ -57,10 +73,12 @@ export class FolderService {
       next: (folders) => {
         this.folders = folders;
         console.log('Folders loaded:', folders);
+        this.foldersUpdated.emit();
       },
       error: (error) => {
         console.error('Error loading folders:', error);
         this.folders = []; // Set to empty array on error
+        this.foldersUpdated.emit();
       }
     });
   }

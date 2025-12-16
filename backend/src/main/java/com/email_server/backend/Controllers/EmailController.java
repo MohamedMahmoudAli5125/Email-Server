@@ -100,6 +100,7 @@ import jakarta.validation.Valid;
     @GetMapping("/{emailId}")
     public ResponseEntity<?> getEmailById(@PathVariable String emailId) {
         try {
+            System.out.println(emailId);
             Email email = emailService.getEmailById(emailId);
             return ResponseEntity.ok(email);
         } catch (Exception e) {
@@ -162,6 +163,7 @@ import jakarta.validation.Valid;
 
 
         try {
+            System.out.println("-----------------");
             emailService.deleteEmail(emailId, userId);
             return ResponseEntity.ok(Map.of("message", "Email moved to trash"));
         } catch (Exception e) {

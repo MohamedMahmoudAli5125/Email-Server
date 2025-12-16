@@ -228,6 +228,7 @@ export class MailService {
 
   deletePemanently(emailId: string) {
     const encoded = encodeURI(emailId)
+    console.log("Deleting permanently:", encoded);
 
     return this.http.delete(`${this.apiUrl}/${encoded}/permanent`)
   }

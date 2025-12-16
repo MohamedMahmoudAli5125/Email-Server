@@ -20,6 +20,8 @@ export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
 
     { path: 'app', component: MainLayout },
+      { path: 'mail/:folderId/:emailId/:pageNumber', component: MailPageComponent },
+
  { path: 'mail/:folderId/:emailId', component: MailPageComponent },
   { path: 'mail/:folderId', component: MailPageComponent },
 //   { path: 'mailpage', component: MailPageComponent },

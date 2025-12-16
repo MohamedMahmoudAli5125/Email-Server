@@ -20,7 +20,8 @@ export class EmailList implements OnChanges {
 
   @Input() folderType = ''
   @Input() folderId!: string;
-  @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string }>();
+  @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string ; pageNumber: number }>();
+
   @Output() openCompose = new EventEmitter<Email>()
 
   emails: Email[] = [];
@@ -270,11 +271,15 @@ export class EmailList implements OnChanges {
   onEmailDoubleClick(email: Email) {
   if (email.id) {
     console.log(email.id,this.folderId);
-    this.emailOpened.emit({ 
-      emailId: email.id, 
-      folderId: this.folderId 
+    // this.emailOpened.emit({ 
+    //   emailId: email.id, 
+    //   folderId: this.folderId ,
+    //         pageNumber: this.currentPage // Pass the page number
+
       
-    });
+    // });
+        this.router.navigate(['/mail', this.folderId, email.id, this.currentPage]);
+
   }
 }
 

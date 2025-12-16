@@ -1,7 +1,3 @@
-
-
-
-
 import { ChangeDetectorRef, Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,13 +5,14 @@ import { MailService, EmailPage } from '../service/mail.service';
 import { Email, Attachment } from '../../models/email';
 import { EmailPriority } from '../../models/enums';
 import { timeout, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 import { SideBar } from "../../shared/side-bar/side-bar";
 import { ActivatedRoute, Router } from '@angular/router';
 import { Folder } from '../../models/folder';
 import { FolderService } from '../../Services/folderService';
 import { EmailService } from '../../Services/EmailService';
 import { SidebarComponent } from "../../slidebar.component/sidebar.component"
+import { get } from 'http';
 
 @Component({
   selector: 'app-mail-page',
@@ -29,10 +26,12 @@ export class MailPageComponent implements OnInit {
   loadEmailId: string = '';
   currentEmail: Email | null = null;
   emailList: Email[] = [];
-  
+  isSidebarCollapsed = false;
+
   // Pagination
   currentEmailIndex: number = 0;
   currentPage: number = 0;
+  targetPage: number = 0;
   pageSize: number = 10;
   totalEmails: number = 0;
   totalPages: number = 0;
@@ -55,6 +54,7 @@ export class MailPageComponent implements OnInit {
   showMoveDropdown = false;
   selectedTargetFolderId: string = '';
   movingEmail = false;
+  private folderUpdateSubscription!: Subscription;
 
   constructor(
     private mailService: MailService,
@@ -78,19 +78,51 @@ export class MailPageComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.folderId = params.get('folderId') || '';
       this.loadEmailId = params.get('emailId') || '';
+      const pageNumberParam  = params.get('pageNumber');
+          let targetPage = 0;
+
+      if (pageNumberParam) {
+        targetPage = parseInt(pageNumberParam, 10);
+      } else {
+        targetPage = 0;
+      }
       
       if (this.folderId) {
         this.loadCurrentFolderName();
         this.loadFolders();
-        this.loadFolderEmails();
-        
+        this.loadFolderEmails(targetPage);
+
         if (this.loadEmailId) {
           // Email will be loaded in loadFolderEmails callback
         }
       }
     });
+        this.subscribeToFolderUpdates();
+
+  }
+  ngOnDestroy() {
+    // Clean up subscription to prevent memory leaks
+    if (this.folderUpdateSubscription) {
+      this.folderUpdateSubscription.unsubscribe();
+    }
+  }
+    private subscribeToFolderUpdates() {
+    // Listen for folder update events
+    this.folderUpdateSubscription = this.folderService.foldersUpdated.subscribe(() => {
+      console.log('Folder update received, refreshing folder list...');
+      this.refreshFoldersList();
+    });
+  }
+    private refreshFoldersList() {
+    // Update the folders array for the move dropdown
+    this.folders = this.folderService.folders.filter(f => f.id !== this.folderId);
+    console.log('Folders refreshed:', this.folders);
+    this.cdr.detectChanges();
   }
 
+toggleSidebar() {
+  this.isSidebarCollapsed = !this.isSidebarCollapsed;
+}
   loadCurrentFolderName() {
     if (!this.folderId) return;
     
@@ -109,6 +141,8 @@ export class MailPageComponent implements OnInit {
     this.folderService.getFolders().subscribe({
       next: (folders) => {
         this.folders = folders.filter(f => f.id !== this.folderId);
+                this.cdr.detectChanges();
+
       },
       error: (error) => {
         console.error('Error loading folders:', error);
@@ -124,7 +158,7 @@ export class MailPageComponent implements OnInit {
     this.router.navigate(['/mail', folderId]);
   }
 
-  loadFolderEmails(page: number = 0) {
+  loadFolderEmails(page: number = 0, isPrevPage: boolean = false) {
     this.isError = false;
     this.mailService.getFolderEmails(this.folderId, page, this.pageSize)
       .subscribe({
@@ -141,12 +175,20 @@ export class MailPageComponent implements OnInit {
           this.totalPages = emailPage.totalPages;
           this.currentPage = emailPage.number;
           this.cdr.markForCheck();
-          
+            console.log('Emails loaded:', this.emailList);
+            console.log('Attempting to load email ID:', this.loadEmailId);
           if (this.emailList.length > 0) {
-            if (this.loadEmailId) {
+          
+            if (this.loadEmailId && !isPrevPage) {
               this.findAndLoadEmail(this.loadEmailId);
             } else {
+              if (isPrevPage) {
+                console.log('Loading last email on previous page');
+                console.log('Email list length:', this.emailList.length-1);
+                this.loadEmailByIndex(this.emailList.length - 1);
+              } else {
               this.loadEmailByIndex(0);
+              }
             }
           } else {
             this.currentEmail = null;
@@ -168,6 +210,7 @@ export class MailPageComponent implements OnInit {
   private findAndLoadEmail(emailId: string) {
     const index = this.emailList.findIndex(e => e.id === emailId);
     if (index !== -1) {
+      console.log(`Email with ID ${emailId} found at index ${index}, loading email`);
       this.loadEmailByIndex(index);
       return true;
     }
@@ -229,7 +272,8 @@ export class MailPageComponent implements OnInit {
 
   loadPrevPage() {
     if (this.currentPage > 0) {
-      this.loadFolderEmails(this.currentPage - 1);
+      
+      this.loadFolderEmails(this.currentPage - 1,true);
     }
   }
 
@@ -299,7 +343,7 @@ export class MailPageComponent implements OnInit {
       const isTrash = this.folderId === 'trash' || this.currentFolderName === 'Trash';
       
       if (isTrash) {
-        this.emailservice.deleteEmailPermanent([this.currentEmail.id]).subscribe({
+        this.emailservice.deleteEmailPermanent1(this.currentEmail.id).subscribe({
           next: (response) => {
             console.log('Email permanently deleted - response received');
             this.showActionFeedback('Email permanently deleted');
@@ -578,6 +622,9 @@ export class MailPageComponent implements OnInit {
   handleKeyboardEvent(event: KeyboardEvent) {
   if (event.key === 'ArrowRight') this.navigateEmail('next');
   if (event.key === 'ArrowLeft') this.navigateEmail('prev');
+}
+navigateToHome() {
+  this.router.navigate(['/home']);
 }
 }
 

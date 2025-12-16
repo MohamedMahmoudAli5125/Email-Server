@@ -11,6 +11,14 @@
     <div class="fixed-header">
       <div class="action-toolbar">
         <div class="toolbar-left">
+           <button 
+        class="toolbar-btn home-btn"
+        (click)="navigateToHome()"
+        title="Go back to Home">
+        <span>🏠</span>
+        <span>Home</span>
+      </button>
+      
           <div class="folder-info">
             <span class="folder-label">{{ currentFolderName || 'Loading...' }}</span>
             <span class="folder-count">({{ totalEmails }} emails)</span>
@@ -194,7 +202,6 @@
                   <div class="attachment-details">
                     <span class="attachment-type">{{ file.fileType.split('/')[1] || 'file' }}</span>
                     <span class="attachment-size">{{ formatFileSize(file.fileSize) }}</span>
-                    <span class="attachment-id" title="{{ file.id }}">ID: {{ file.id.substring(0, 8) }}...</span>
                   </div>
                 </div>
 

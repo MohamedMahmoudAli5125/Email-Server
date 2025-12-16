@@ -62,6 +62,10 @@ markAsUnread(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}?userId=${userId}`);
   }
 
+  deleteEmailPermanent1(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}/permanent`);
+  }
+
   bulkDelete(ids: string[]): Observable<any> {
     const userId = this.auth.getUserId();
     return this.http.delete(`${this.apiUrl}/bulk`, { body: { emailIds: ids, userId } });
