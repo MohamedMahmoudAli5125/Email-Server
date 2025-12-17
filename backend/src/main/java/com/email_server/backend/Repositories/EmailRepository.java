@@ -1,6 +1,7 @@
 package com.email_server.backend.Repositories;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,84 +12,95 @@ import org.springframework.stereotype.Repository;
 
 import com.email_server.backend.Entities.Email;
 import com.email_server.backend.enums.EmailPriority;
+
 @Repository
-public interface EmailRepository  extends JpaRepository< Email,String> {
+public interface EmailRepository extends JpaRepository<Email, String> {
 
-// this pageable what tell to db give the first 10 first 20 we give the method thie in service  and return page (mean here the first rows )
-// we need this to return the emails of certian folder for by folder id as forign key
-Page<Email> findByFolderId(String folderId, Pageable pageable);
+    @Query("SELECT e FROM Email e LEFT JOIN FETCH e.attachments WHERE e.id = :emailId")
+    Optional<Email> findByIdWithAttachments(@Param("emailId") String emailId);
 
-// this return for certain forlder and not read to be in first if we need as external filter
-Page<Email> findByFolderIdAndIsReadFalse(String folderId, Pageable pageable);
+    // CHANGED: Query emails in a specific folder, excluding deleted ones
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false")
+    Page<Email> findByFolderId(@Param("folderId") String folderId, Pageable pageable);
 
-    // this return if the emial is important who make the emiail important or not is sender and also what make the prioriy is he
-    Page<Email> findByFolderIdAndIsImportantTrue(String folderId, Pageable pageable);
+    // Get all emails in a folder (including deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId")
+    Page<Email> findByFolderIdIncludingDeleted(@Param("folderId") String folderId, Pageable pageable);
 
-    // this retrung dreaft true but not need ans first one enough and we not need draft flag in email
-    Page<Email> findByFolderIdAndIsDraftTrue(String folderId, Pageable pageable);
+    // For trash folder - get deleted emails
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = true")
+    Page<Email> findDeletedByFolderId(@Param("folderId") String folderId, Pageable pageable);
 
-    // Search by subject this retun if the
-    // this not sql and mean select e mean entity emial
-    // from Email e mean table Eamil of entity emial
-    // e.folder
-    // :folderId :  this mean  take as paramter not hard copy
-    // Lower conver to lower casses to avoid case senstive
-    // Like to search for pattern
-    // %keyWord% mean kajsdklfjdsk keyword sklajkldjkfj  any accoure for this pattern in the code
-    // we need it as he want to search in subject and sender and attachmeant
+    // Unread emails in folder (excluding deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND e.isRead = false")
+    Page<Email> findByFolderIdAndIsReadFalse(@Param("folderId") String folderId, Pageable pageable);
 
+    // Important emails in folder (excluding deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND e.isImportant = true")
+    Page<Email> findByFolderIdAndIsImportantTrue(@Param("folderId") String folderId, Pageable pageable);
 
-//   this three consider filter but we want make it by our self filter design pattern as we take all emials first and then filter them by required one
-// by filter desing pattern or by make Specifcation class this filter to search reuslt or the emial in folder
-//    @Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND LOWER(e.subject) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-//    Page<Email> searchBySubject(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
-//
-//    // Search by sender
-@Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND LOWER(e.fromEmail) LIKE LOWER(CONCAT('%', :sender, '%'))")
-Page<Email> searchBySender(@Param("folderId") String folderId, @Param("sender") String sender, Pageable pageable);
+    // Draft emails in folder (excluding deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND e.isDraft = true")
+    Page<Email> findByFolderIdAndIsDraftTrue(@Param("folderId") String folderId, Pageable pageable);
 
-    // Search by body
-    @Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND LOWER(e.body) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    // Search by sender (excluding deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND LOWER(e.fromEmail) LIKE LOWER(CONCAT('%', :sender, '%'))")
+    Page<Email> searchBySender(@Param("folderId") String folderId, @Param("sender") String sender, Pageable pageable);
+
+    // Search by body (excluding deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND LOWER(e.body) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Email> searchByBody(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 
-    // Search by just attachment
-    @Query("SELECT e FROM Email e Join e.attachments b WHERE e.folder.id = :folderId AND LOWER(b.fileName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    // Search by attachment (excluding deleted)
+    @Query("SELECT DISTINCT e FROM Email e JOIN e.folders f JOIN e.attachments a WHERE f.id = :folderId AND e.isDeleted = false AND LOWER(a.fileName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Email> searchByAttachment(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 
-
-
-// and we want filter by sender and subject and we can make it
-// by filter desing pattern all of them make class to filter by those four things and  or make thing called SPEcification in spring boot
-@Query("SELECT e FROM Email e  Join e.attachments b    WHERE e.folder.id = :folderId And "+
-" LOWER(e.body) LIKE LOWER (CONCAT('%',:keyword,'%') ) OR  "+
-"LOWER(e.subject) LIKE LOWER (CONCAT('%',:keyword,'%') ) OR "+
-"LOWER(e.fromEmail) LIKE LOWER (CONCAT('%',:keyword,'%') )  OR "+
-" LOWER(b.fileName) LIKE LOWER (CONCAT('%',:keyword,'%') )   "
-)
+    // Search all fields (excluding deleted)
+    @Query("SELECT DISTINCT e FROM Email e JOIN e.folders f LEFT JOIN e.attachments a WHERE f.id = :folderId AND e.isDeleted = false AND " +
+            "(LOWER(e.body) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(e.subject) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(e.fromEmail) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(a.fileName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Email> searchByAll(@Param("folderId") String folderId, @Param("keyword") String keyword, Pageable pageable);
 
+    // Find by priority (excluding deleted)
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND e.priority = :priority")
+    Page<Email> findByFolderIdAndPriority(@Param("folderId") String folderId, @Param("priority") EmailPriority priority, Pageable pageable);
 
-
-
-// the reutlt of search or the emials in folder we need to sort them in Date or inportance if he ask we make or by two
-
-
-
-
-    // Find by priority this mean user chose priority and make filter to what in the page for this prioriy                bonus
-    Page<Email> findByFolderIdAndPriority(String folderId, EmailPriority priority, Pageable pageable);
-
-    // Find emails with attachments  this also bounus filter for emails which has attachmeants                            bonus
-    @Query("SELECT e FROM Email e WHERE e.folder.id = :folderId AND SIZE(e.attachments) > 0")
+    // Find emails with attachments (excluding deleted)
+    @Query("SELECT DISTINCT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND SIZE(e.attachments) > 0")
     Page<Email> findEmailsWithAttachments(@Param("folderId") String folderId, Pageable pageable);
 
     // Delete old emails from trash
-    @Query("DELETE FROM Email e WHERE e.folder.type = 'TRASH' AND e.sentDate < :cutoffDate")
+    @Query("DELETE FROM Email e WHERE e.isDeleted = true AND e.sentDate < :cutoffDate")
     void deleteOldTrashEmails(@Param("cutoffDate") LocalDateTime cutoffDate);
 
-    // Count unread emails in folder                                                                                   bonus
-    long countByFolderIdAndIsReadFalse(String folderId);
+    // Count unread emails in folder (excluding deleted)
+    @Query("SELECT COUNT(e) FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false AND e.isRead = false")
+    long countByFolderIdAndIsReadFalse(@Param("folderId") String folderId);
 
+    // Check if email is in specific folder
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Email e JOIN e.folders f WHERE e.id = :emailId AND f.id = :folderId")
+    boolean isEmailInFolder(@Param("emailId") String emailId, @Param("folderId") String folderId);
 
+// EmailRepository.java
+
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = false " +
+            "ORDER BY CASE e.priority " +
+            "WHEN 'URGENT' THEN 4 " +
+            "WHEN 'HIGH' THEN 3 " +
+            "WHEN 'NORMAL' THEN 2 " +
+            "WHEN 'LOW' THEN 1 " +
+            "END DESC, e.sentDate DESC")
+    Page<Email> findByFolderIdSortedByPriority(@Param("folderId") String folderId, Pageable pageable);
+
+    @Query("SELECT e FROM Email e JOIN e.folders f WHERE f.id = :folderId AND e.isDeleted = true " +
+            "ORDER BY CASE e.priority " +
+            "WHEN 'URGENT' THEN 4 " +
+            "WHEN 'HIGH' THEN 3 " +
+            "WHEN 'NORMAL' THEN 2 " +
+            "WHEN 'LOW' THEN 1 " +
+            "END DESC, e.sentDate DESC")
+    Page<Email> findDeletedByFolderIdSortedByPriority(@Param("folderId") String folderId, Pageable pageable);
 
 }
