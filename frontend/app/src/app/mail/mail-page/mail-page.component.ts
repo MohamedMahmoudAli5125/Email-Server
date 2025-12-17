@@ -136,6 +136,7 @@ export class MailPageComponent implements OnInit {
             bcc: email.bcc || [],
             attachments: email.attachments || []
           }));
+          console.log(this.emailList)
           
           this.totalEmails = emailPage.totalElements;
           this.totalPages = emailPage.totalPages;

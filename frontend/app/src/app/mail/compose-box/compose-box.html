@@ -11,12 +11,13 @@
                 placeholder="Body"></textarea>
             <input class="file-input" name="files" (change)="onFileSelected($event)" type="file" multiple>
             <div class="attachments">
-                <div class="attachment" *ngFor="let att of attachments">
-                    <span>{{ att.fileName }}</span>
-                </div>
                 <div class="attachment" *ngFor="let file of composeEmail.attachmentFiles; let i = index">
                     <span>{{ file.name }}</span>
                     <button type="button" (click)="removeAttachment(i)">×</button>
+                </div>
+                <div class="attachment" *ngFor="let att of attachments; let i = index">
+                    <span>{{ att.fileName }}</span>
+                    <button type="button" (click)="removeSavedAttachment(att, i)">×</button>
                 </div>
             </div>
             <div class="button-container">
