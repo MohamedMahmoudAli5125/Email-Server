@@ -2,9 +2,11 @@ package com.email_server.backend.Services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import com.email_server.backend.Dto.EmailFilterDTO;
 import com.email_server.backend.Repositories.FolderRepository;
@@ -66,7 +68,7 @@ public class EmailService {
                 .toList(emailDTO.getTo())
                 .subject(emailDTO.getSubject())
                 .body(emailDTO.getBody())
-                .priority(emailDTO.getPriority() )
+                .priority(emailDTO.getPriority())
                 .sentDate(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
@@ -78,13 +80,26 @@ public class EmailService {
         Folder sentFolder = folderService.getUserFolderByType(userId, FolderType.SENT);
         savedEmail.addFolder(sentFolder);
 
-        // Save attachments with the email
+        // Handle existing attachments (from draft)
+        if (emailDTO.getExistingAttachmentIds() != null && !emailDTO.getExistingAttachmentIds().isEmpty()) {
+            List<String> attachmentIds = Arrays.asList(emailDTO.getExistingAttachmentIds().split(","));
+            for (String attachmentId : attachmentIds) {
+                if (!attachmentId.trim().isEmpty()) {
+                    Attachment existingAttachment = attachmentService.getAttachment(attachmentId.trim());
+                    // Link existing attachment to this email
+                    existingAttachment.setEmail(savedEmail);
+                    savedEmail.getAttachments().add(existingAttachment);
+                }
+            }
+        }
+
+        // Save new attachments
         if (emailDTO.getAttachmentFiles() != null && !emailDTO.getAttachmentFiles().isEmpty()) {
-            List<Attachment> attachments = attachmentService.saveAttachments(
+            List<Attachment> newAttachments = attachmentService.saveAttachments(
                     emailDTO.getAttachmentFiles(),
                     savedEmail
             );
-            savedEmail.getAttachments().addAll(attachments);
+            savedEmail.getAttachments().addAll(newAttachments);
         }
 
         savedEmail = emailRepository.save(savedEmail);
@@ -147,6 +162,7 @@ public class EmailService {
                         .fileType(originalAttachment.getFileType())
                         .filePath(originalAttachment.getFilePath())
                         .fileSize(originalAttachment.getFileSize())
+                        .email(copiedEmail)
                         .build();
                 copiedEmail.addAttachment(copiedAttachment);
             }
@@ -174,7 +190,19 @@ public class EmailService {
         Folder draftFolder = folderService.getUserFolderByType(userId, FolderType.DRAFT);
         savedDraft.addFolder(draftFolder);
 
-        // Save attachments
+        // Handle existing attachments (when re-drafting)
+        if (emailDTO.getExistingAttachmentIds() != null && !emailDTO.getExistingAttachmentIds().isEmpty()) {
+            List<String> attachmentIds = Arrays.asList(emailDTO.getExistingAttachmentIds().split(","));
+            for (String attachmentId : attachmentIds) {
+                if (!attachmentId.trim().isEmpty()) {
+                    Attachment existingAttachment = attachmentService.getAttachment(attachmentId.trim());
+                    existingAttachment.setEmail(savedDraft);
+                    savedDraft.getAttachments().add(existingAttachment);
+                }
+            }
+        }
+
+        // Save new attachments
         if (emailDTO.getAttachmentFiles() != null && !emailDTO.getAttachmentFiles().isEmpty()) {
             List<Attachment> attachments = attachmentService.saveAttachments(
                     emailDTO.getAttachmentFiles(),
@@ -194,10 +222,33 @@ public class EmailService {
             throw new RuntimeException("Email is not a draft");
         }
 
+        // Update basic fields
         draft.setToList(emailDTO.getTo());
         draft.setSubject(emailDTO.getSubject());
         draft.setBody(emailDTO.getBody());
         draft.setPriority(emailDTO.getPriority() != null ? emailDTO.getPriority() : EmailPriority.NORMAL);
+
+        // Handle existing attachments
+        if (emailDTO.getExistingAttachmentIds() != null && !emailDTO.getExistingAttachmentIds().isEmpty()) {
+            List<String> attachmentIds = Arrays.asList(emailDTO.getExistingAttachmentIds().split(","));
+
+            // Get current attachment IDs
+            List<String> currentIds = draft.getAttachments().stream()
+                    .map(Attachment::getId)
+                    .collect(Collectors.toList());
+
+            // Keep only attachments that are in the existingAttachmentIds list
+            draft.getAttachments().removeIf(att -> !attachmentIds.contains(att.getId()));
+        }
+
+        // Add new attachments
+        if (emailDTO.getAttachmentFiles() != null && !emailDTO.getAttachmentFiles().isEmpty()) {
+            List<Attachment> newAttachments = attachmentService.saveAttachments(
+                    emailDTO.getAttachmentFiles(),
+                    draft
+            );
+            draft.getAttachments().addAll(newAttachments);
+        }
 
         return emailRepository.save(draft);
     }
@@ -242,29 +293,19 @@ public class EmailService {
         return emailRepository.save(email);
     }
 
-    /**
-     * Move email to a target folder
-     * - If moving to TRASH: set isDeleted = true (soft delete)
-     * - If moving from TRASH: set isDeleted = false (restore)
-     * - If moving to custom folder: add folder without removing others
-     */
     @Transactional
     public void moveEmail(String emailId, String targetFolderId) {
         Email email = getEmailById(emailId);
         Folder targetFolder = folderService.getFolderById(targetFolderId);
 
         if (targetFolder.getType() == FolderType.TRASH) {
-            // Moving to trash - soft delete
             email.setDeleted(true);
-            // Add to trash folder
             if (!email.getFolders().contains(targetFolder)) {
                 email.addFolder(targetFolder);
             }
         } else {
-            // Moving from trash or between folders
             if (email.isDeleted()) {
-                // Restoring from trash
-                email.setDeleted(false);                // Remove from trash folder
+                email.setDeleted(false);
                 Folder trashFolder = email.getFolders().stream()
                         .filter(f -> f.getType() == FolderType.TRASH)
                         .findFirst()
@@ -273,7 +314,6 @@ public class EmailService {
                     email.removeFolder(trashFolder);
                 }
             }
-            // Add to target folder if not already there
             if (!email.getFolders().contains(targetFolder)) {
                 email.addFolder(targetFolder);
             }
@@ -289,12 +329,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Remove email from a custom folder
-     * - Does NOT mark as deleted
-     * - Only removes from the specified folder
-     * - Email remains in other folders
-     */
     @Transactional
     public void removeFromCustomFolder(String emailId, String folderId) {
         Email email = getEmailById(emailId);
@@ -308,18 +342,11 @@ public class EmailService {
         emailRepository.save(email);
     }
 
-    /**
-     * Delete email (move to trash)
-     * - Sets isDeleted = true
-     * - Keeps email in all folders but won't show in non-trash folders
-     */
     @Transactional
     public void deleteEmail(String emailId, String userId) {
         Email email = getEmailById(emailId);
         email.setDeleted(true);
 
-
-        // Add to trash folder
         Folder trashFolder = folderService.getUserFolderByType(userId, FolderType.TRASH);
         if (!email.getFolders().contains(trashFolder)) {
             email.addFolder(trashFolder);
@@ -328,11 +355,6 @@ public class EmailService {
         emailRepository.save(email);
     }
 
-    /**
-     * Permanently delete email
-     * - Removes from database
-     * - Also deletes all attachments
-     */
     @Transactional
     public void deletePermanently(String emailId) {
         Email email = getEmailById(emailId);
@@ -359,18 +381,11 @@ public class EmailService {
         }
     }
 
-    /**
-     * Restore email from trash
-     * - Sets isDeleted = false
-     * - Removes from trash folder
-     * - Email remains in its original folders
-     */
     @Transactional
     public void restoreFromTrash(String emailId, String userId) {
         Email email = getEmailById(emailId);
         email.setDeleted(false);
 
-        // Remove from trash folder
         Folder trashFolder = folderService.getUserFolderByType(userId, FolderType.TRASH);
         email.removeFolder(trashFolder);
 
@@ -445,16 +460,14 @@ public class EmailService {
 
         return emailRepository.save(savedEmail);
     }
+
     public Page<Email> getFolderEmailsSortedByPriority(String folderId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        // Check if it's trash folder
         Folder folder = folderService.getFolderById(folderId);
         if (folder.getType() == FolderType.TRASH) {
-            // For trash, return only deleted emails sorted by priority
             return emailRepository.findDeletedByFolderIdSortedByPriority(folderId, pageable);
         } else {
-            // For other folders, return non-deleted emails sorted by priority
             return emailRepository.findByFolderIdSortedByPriority(folderId, pageable);
         }
     }

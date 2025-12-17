@@ -21,9 +21,15 @@
                 </div>
             </div>
             <div class="button-container">
-                <select [(ngModel)]="composeEmail.priority" name="priority" id="priority">
-                    <option *ngFor="let p of priorities" [value]="p.toUpperCase()">{{p}}</option>
-                </select>
+
+              <select [(ngModel)]="composeEmail.priority" name="priority">
+  <option [ngValue]="EmailPriority.NORMAL">Normal</option>
+  <option [ngValue]="EmailPriority.HIGH">High</option>
+  <option [ngValue]="EmailPriority.URGENT">Urgent</option>
+  <option [ngValue]="EmailPriority.LOW">Low</option>
+</select>
+
+
                 <button type="button" class="draft" (click)="draftEmail(emailForm)">draft</button>
                 <button type="submit" class="send">Send</button>
             </div>

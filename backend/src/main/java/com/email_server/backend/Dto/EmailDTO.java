@@ -1,32 +1,28 @@
 package com.email_server.backend.Dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import com.email_server.backend.enums.EmailPriority;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.email_server.backend.enums.EmailPriority;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class EmailDTO {
-    
-    @NotBlank(message = "Sender email is required")
     private String fromEmail;
-    
-    @NotEmpty(message = "At least one recipient is required")
-    private List<String> to = new ArrayList<>();
-    
-    private List<String> cc = new ArrayList<>();
-    private List<String> bcc = new ArrayList<>();
-    
-    @NotBlank(message = "Subject is required")
+    private List<String> to;
+    private List<String> cc;
+    private List<String> bcc;
     private String subject;
-    
     private String body;
-    private EmailPriority priority = EmailPriority.NORMAL;
+    private EmailPriority priority;
     private List<MultipartFile> attachmentFiles;
 
+    // NEW: For handling existing attachments when sending drafts
+    private String existingAttachmentIds; // Comma-separated IDs
 }
