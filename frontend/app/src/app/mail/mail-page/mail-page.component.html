@@ -2,12 +2,21 @@
   <!-- Sidebar Component -->
   <app-sidebar 
     (folderSelected)="onFolderSelected($event)"
+    (toggleComposeSignal)="onComposeToggle()"
     class="sidebar-section">
   </app-sidebar>
 
   <!-- Main Content Area -->
   <div class="mail-page-container">
     <!-- Fixed header with actions -->
+     <div class="compose-overlay" *ngIf="showComposeBox">
+      <app-compose-box
+        [showCompose]="showComposeBox"
+        [currentEmail]="composeEmail"
+        [isDraft]="isDraft"
+        (closeCompose)="onCloseCompose()">
+      </app-compose-box>
+    </div>
     <div class="fixed-header">
       <div class="action-toolbar">
         <div class="toolbar-left">

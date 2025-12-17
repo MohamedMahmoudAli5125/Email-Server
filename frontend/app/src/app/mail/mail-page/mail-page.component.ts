@@ -13,11 +13,12 @@ import { FolderService } from '../../Services/folderService';
 import { EmailService } from '../../Services/EmailService';
 import { SidebarComponent } from "../../slidebar.component/sidebar.component"
 import { get } from 'http';
+import { ComposeBox } from '../compose-box/compose-box';
 
 @Component({
   selector: 'app-mail-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SideBar, SidebarComponent],
+  imports: [CommonModule, FormsModule, SideBar, SidebarComponent, ComposeBox],
   templateUrl: './mail-page.component.html',
   styleUrls: ['./mail-page.component.css']
 })
@@ -55,6 +56,10 @@ export class MailPageComponent implements OnInit {
   selectedTargetFolderId: string = '';
   movingEmail = false;
   private folderUpdateSubscription!: Subscription;
+
+  showComposeBox = false;
+  composeEmail!: Email;
+  isDraft = false;
 
   constructor(
     private mailService: MailService,
@@ -624,9 +629,47 @@ toggleSidebar() {
   if (event.key === 'ArrowRight') this.navigateEmail('next');
   if (event.key === 'ArrowLeft') this.navigateEmail('prev');
 }
+
+
+  onComposeToggle() {
+    console.log('Compose toggle received, showing compose box');
+    this.showComposeBox = true;
+    this.composeEmail = this.clearEmail(); // Create empty email
+    this.isDraft = false;
+    this.cdr.detectChanges();
+  }
+
+  // Add this method to close compose box
+  onCloseCompose() {
+    this.showComposeBox = false;
+    this.cdr.detectChanges();
+  }
+
+  // Add this method to create empty email
+  private clearEmail(): Email {
+    return {
+      id: '',
+      fromEmail: localStorage.getItem('userEmail') || '',
+      to: [],
+      toList: [],
+      cc: [],
+      bcc: [],
+      subject: '',
+      body: '',
+      priority: EmailPriority.NORMAL,
+      attachmentFiles: [],
+      attachments: [],
+      sentDate: '',
+      isRead: false,
+      archived: false,
+      isImportant: false
+    };
+  }
 navigateToHome() {
   this.router.navigate(['/home']);
 }
+
+
 }
 
 

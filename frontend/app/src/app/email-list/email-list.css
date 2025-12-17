@@ -381,7 +381,7 @@
 
 .email-row {
   display: grid;
-  grid-template-columns: 40px 40px 200px 1fr 40px 120px;
+grid-template-columns: 40px 40px 200px 1fr 60px 40px 120px;
   gap: 16px;
   align-items: center;
   padding: 0 16px;
@@ -587,4 +587,167 @@
   .toolbar-right {
     gap: 2px;
   }
+}/* Priority indicator styles */
+.priority-indicator {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.priority-urgent {
+  background: #fee;
+  color: #c00;
+  border: 1px solid #f4b3af;
+}
+
+.priority-high {
+  background: #fff3e0;
+  color: #f57c00;
+  border: 1px solid #ffb74d;
+}
+
+.priority-normal {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a8dab5;
+}
+
+.priority-low {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #90caf9;
+}
+
+/* For the email-list.html */
+.email-priority-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+/* For the mail-page email list */
+.priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.priority-dot.urgent { background: #c00; }
+.priority-dot.high { background: #f57c00; }
+.priority-dot.normal { background: #2e7d32; }
+.priority-dot.low { background: #1976d2; }
+/* Priority Column Styles */
+.email-priority {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+
+.priority-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  text-align: center;
+  cursor: default;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  min-width: 50px;
+  display: inline-block;
+}
+
+.priority-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Priority Color Variations */
+.priority-badge.priority-urgent {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  border: 1px solid #ff5252;
+}
+
+.priority-badge.priority-high {
+  background: linear-gradient(135deg, #ffa726, #ff9800);
+  color: white;
+  border: 1px solid #ff9800;
+}
+
+.priority-badge.priority-normal {
+  background: linear-gradient(135deg, #66bb6a, #4caf50);
+  color: white;
+  border: 1px solid #4caf50;
+}
+
+.priority-badge.priority-low {
+  background: linear-gradient(135deg, #42a5f5, #2196f3);
+  color: white;
+  border: 1px solid #2196f3;
+}
+
+/* Tooltip styling for priority badge */
+.priority-badge {
+  position: relative;
+}
+
+.priority-badge::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 100;
+  margin-bottom: 8px;
+}
+
+.priority-badge:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.priority-badge::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  margin-bottom: -2px;
+  z-index: 101;
+}
+
+.priority-badge:hover::before {
+  opacity: 1;
+  visibility: visible;
 }

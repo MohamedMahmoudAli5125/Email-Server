@@ -111,6 +111,7 @@ export class SidebarComponent implements OnInit {
   }
 
   toggleCompose() {
+    console.log("Toggling compose");
     this.toggleComposeSignal.emit();
   }
    toggleProfile(): void {

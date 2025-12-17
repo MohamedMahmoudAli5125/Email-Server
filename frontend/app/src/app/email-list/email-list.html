@@ -309,7 +309,17 @@
       <div class="email-content">
         <span class="email-subject">{{ email.subject }}</span>
         <span class="email-preview"> - {{ email.body | slice:0:100 }}</span>
+        
       </div>
+    <!-- PRIORITY COLUMN -->
+    <div class="email-priority">
+      <span 
+        class="priority-badge"
+        [ngClass]="'priority-' + (email.priority?.toLowerCase() || 'normal')"
+        [title]="'Priority: ' + (email.priority || 'NORMAL')">
+        {{ email.priority || 'NORMAL' }}
+      </span>
+    </div>
 
       <!-- Attachments indicator -->
       <div class="email-attachment">
