@@ -189,6 +189,8 @@ while(!allRecipients.isEmpty()){
                 newAttachment.setFileName(originalAttachment.getFileName());
                 newAttachment.setFileType(originalAttachment.getFileType());
                 newAttachment.setFileSize(originalAttachment.getFileSize());
+                 newAttachment.setFilePath(originalAttachment.getFilePath());
+
                 // Don't set the email here - it will be set automatically when saved
                 copiedAttachments.add(newAttachment);
             }
@@ -500,4 +502,5 @@ while(!allRecipients.isEmpty()){
 
 
 }
+
 
