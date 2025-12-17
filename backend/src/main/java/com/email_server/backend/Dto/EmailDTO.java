@@ -28,4 +28,5 @@ public class EmailDTO {
     private String body;
     private EmailPriority priority = EmailPriority.NORMAL;
     private List<MultipartFile> attachmentFiles;
+
 }
