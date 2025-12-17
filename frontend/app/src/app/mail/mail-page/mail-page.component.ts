@@ -170,6 +170,7 @@ toggleSidebar() {
             bcc: email.bcc || [],
             attachments: email.attachments || []
           }));
+          console.log(this.emailList)
           
           this.totalEmails = emailPage.totalElements;
           this.totalPages = emailPage.totalPages;

@@ -6,6 +6,7 @@ import { AuthService } from '../../auth/auth.service';
 import { EmailPriority } from '../../models/enums';
 import { setPriority } from 'os';
 import { MailService } from '../service/mail.service';
+import { AttachmentService } from '../../Services/attachment.service';
 
 @Injectable()
 @Component({
@@ -26,7 +27,11 @@ export class ComposeBox {
   priority = 'Normal';
   attachments: Attachment[] = [];
 
-  constructor(private authService: AuthService, private mailService: MailService) { }
+  constructor(
+    private authService: AuthService, 
+    private mailService: MailService,
+    private attachmentService: AttachmentService
+  ) { }
 
   ngOnChanges(changes: SimpleChanges) {
 
@@ -36,9 +41,7 @@ export class ComposeBox {
       this.composeEmail = structuredClone(email);
       this.toInput = (email.toList ?? []).join(', ');
       this.priority = this.getPriorityAsString();
-      this.attachments = (email.attachments ?? []).map(
-        (a: Attachment) => ({ name: a.fileName })
-      );
+      this.attachments = email.attachments;
       console.log(this.attachments)
     }
     if (changes['showCompose'] && changes['showCompose']?.currentValue == false) {
@@ -46,6 +49,20 @@ export class ComposeBox {
       this.toInput = ''
       this.priority = 'Normal';
     }
+  }
+
+
+  removeSavedAttachment(att: Attachment, index: number) {
+    this.attachments.splice(index, 1);
+    
+    this.attachmentService.removeAttachment(this.composeEmail.id, att.id).subscribe({
+      next: (res) => {
+        console.log('removed att')
+      },
+      error: (err) => {
+        console.log(err)
+      }
+    })
   }
 
   onFileSelected(event: Event) {
@@ -149,7 +166,7 @@ export class ComposeBox {
   }
 
   removeAttachment(index: number) {
-    this.currentEmail.attachmentFiles!.splice(index, 1);
+    this.composeEmail.attachmentFiles!.splice(index, 1);
   }
 
   clearEmail(): Email {

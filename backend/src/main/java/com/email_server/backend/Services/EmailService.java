@@ -98,7 +98,7 @@ public class EmailService {
               emailDTO.getAttachmentFiles(),
               savedEmail
       );
-      savedEmail.setAttachments(attachments);
+//      savedEmail.setAttachments(attachments);
 
 
 //        List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
@@ -213,7 +213,7 @@ while(!allRecipients.isEmpty()){
     }
 
 
- @Transactional
+    @Transactional
     public Email saveDraft(String userId, EmailDTO emailDTO) {
         List<Attachment> attachments = attachmentService.saveAttachments(emailDTO.getAttachmentFiles());
 
@@ -226,13 +226,16 @@ while(!allRecipients.isEmpty()){
                 .priority(emailDTO.getPriority() != null ? emailDTO.getPriority() : EmailPriority.NORMAL)
                 .sentDate(LocalDateTime.now())
                 .isDraft(true)
-                .attachments(attachments)
                 .build();
+
 
         Folder draftFolder = folderService.getUserFolderByType(userId, FolderType.DRAFT);
         draft.setFolder(draftFolder);
 
-        return emailRepository.save(draft);
+        Email savedDraft = emailRepository.save(draft);
+        this.attachmentService.saveAttachments(emailDTO.getAttachmentFiles(), savedDraft);
+
+        return savedDraft;
     }
 
     @Transactional

@@ -52,11 +52,11 @@ export interface Email {
   priority: EmailPriority;
   attachmentFiles?: File[];
   attachments?: Attachment[];
- 
+
   sentDate: string; // Backend uses sentDate
   isRead: boolean;
   archived: boolean;
-   isImportant:boolean;
+  isImportant: boolean;
 }
 
 export interface Attachment {
