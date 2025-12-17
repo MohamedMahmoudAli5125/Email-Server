@@ -1,6 +1,6 @@
 <!-- email-list.html -->
 <div class="email-list-container">
-  <!-- SEARCH BAR - NEW! -->
+  <!-- SEARCH BAR -->
   <div class="search-header">
     <div class="search-bar-wrapper">
       <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -41,7 +41,7 @@
     </div>
   </div>
 
-  <!-- ADVANCED FILTERS PANEL - NEW! -->
+  <!-- ADVANCED FILTERS PANEL -->
   <div class="advanced-filters" *ngIf="showAdvancedFilter">
     <div class="filters-grid">
       <!-- From Filter -->
@@ -198,18 +198,38 @@
         <span class="checkbox-custom"></span>
       </label>
       
+
+      
+      <!-- Delete/Remove Button - Changes based on folder type -->
+      
       <button 
         class="toolbar-icon-btn"
         [class.visible]="showActions"
+        [class.delete-forever]="isTrashFolder()"
         (click)="bulkDelete()"
-        title="Delete"
+        [title]="getDeleteButtonTooltip()"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
         </svg>
       </button>
 
-      <div class="move-dropdown" *ngIf="showActions">
+      <!-- Restore Button - Only show in Trash folder -->
+      <button 
+        *ngIf="isTrashFolder()"
+        class="toolbar-icon-btn restore-btn"
+        [class.visible]="showActions"
+        (click)="bulkRestore()"
+        title="Restore from trash"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </button>
+
+      <!-- Move Dropdown - Only show custom folders and only when NOT in custom folder -->
+      <div class="move-dropdown" *ngIf="showActions && !isCustomFolder() && hasCustomFolders()">
         <button class="toolbar-icon-btn" title="Move to">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
@@ -233,6 +253,19 @@
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/>
+        </svg>
+      </button>
+
+       <button 
+        class="toolbar-icon-btn priority-sort-btn"
+        [class.active]="sortByPriority"
+        (click)="togglePrioritySort()"
+        title="{{ sortByPriority ? 'Sort by date' : 'Sort by priority' }}"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="16" y2="12"/>
+          <line x1="4" y1="18" x2="12" y2="18"/>
         </svg>
       </button>
     </div>
@@ -271,7 +304,6 @@
       [class.selected]="isSelected(email.id)"
       (click)="openEmail(email, $event)"
       (dblclick)="onEmailDoubleClick(email)" 
-
     >
       <!-- Checkbox -->
       <div class="email-checkbox" (click)="$event.stopPropagation()">
@@ -309,17 +341,7 @@
       <div class="email-content">
         <span class="email-subject">{{ email.subject }}</span>
         <span class="email-preview"> - {{ email.body | slice:0:100 }}</span>
-        
       </div>
-    <!-- PRIORITY COLUMN -->
-    <div class="email-priority">
-      <span 
-        class="priority-badge"
-        [ngClass]="'priority-' + (email.priority?.toLowerCase() || 'normal')"
-        [title]="'Priority: ' + (email.priority || 'NORMAL')">
-        {{ email.priority || 'NORMAL' }}
-      </span>
-    </div>
 
       <!-- Attachments indicator -->
       <div class="email-attachment">
