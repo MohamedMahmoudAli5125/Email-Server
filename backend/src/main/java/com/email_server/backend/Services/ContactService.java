@@ -1,8 +1,6 @@
 package com.email_server.backend.Services;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.email_server.backend.Dto.ContactDTO;
@@ -10,8 +8,11 @@ import com.email_server.backend.Entities.Contact;
 import com.email_server.backend.Entities.User;
 import com.email_server.backend.Repositories.ContactRepository;
 import com.email_server.backend.Services.UserService;
+import com.email_server.backend.patterns.criteria.ContactCriteriaFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.email_server.backend.patterns.criteria.ContactCriteria;
+import com.email_server.backend.patterns.criteria.CriteriaFactory;
 
 
 @Service
@@ -134,10 +135,6 @@ public class ContactService {
         return processedEmails;
     }
 
-    /**
-     * Check if an email already exists in any of the user's contacts
-     * This is for preventing duplicates within user's own contacts
-     */
     public boolean emailExistsInUserContacts(String userId, String email) {
         List<Contact> userContacts = contactRepository.findByUserId(userId);
         String emailToCheck = email.trim().toLowerCase();
@@ -153,10 +150,6 @@ public class ContactService {
         return false;
     }
 
-    /**
-     * Find which of user's contacts contains a specific email
-     * Returns null if email not found in user's contacts
-     */
     public Contact findContactByEmail(String userId, String email) {
         List<Contact> userContacts = contactRepository.findByUserId(userId);
         String emailToFind = email.trim().toLowerCase();
@@ -171,4 +164,110 @@ public class ContactService {
 
         return null;
     }
-}
+
+        public List<Contact> searchContacts(String userId, Map<String, String> searchParams) {
+            List<Contact> contacts = getUserContacts(userId);
+
+            if (searchParams == null || searchParams.isEmpty()) {
+                return contacts;
+            }
+
+            ContactCriteria criteria = null;
+
+            // Search by name
+            if (searchParams.containsKey("name")) {
+                criteria = ContactCriteriaFactory.createNameCriteria(searchParams.get("name"));
+            }
+
+            // Search by email
+            if (searchParams.containsKey("email")) {
+                ContactCriteria emailCriteria = ContactCriteriaFactory.createEmailCriteria(searchParams.get("email"));
+                if (criteria == null) {
+                    criteria = emailCriteria;
+                } else {
+                    // Combine with AND logic
+                    criteria = ContactCriteriaFactory.createAndCriteria(criteria, emailCriteria);
+                }
+            }
+
+            // Search all (name or email)
+            if (searchParams.containsKey("search")) {
+                criteria = ContactCriteriaFactory.createSearchAllCriteria(searchParams.get("search"));
+            }
+
+            // Apply sorting
+            if (searchParams.containsKey("sortBy")) {
+                String sortBy = searchParams.get("sortBy");
+                boolean ascending = !"desc".equals(searchParams.getOrDefault("order", "asc"));
+
+                ContactCriteria sortCriteria = null;
+                switch (sortBy.toLowerCase()) {
+                    case "name":
+                        sortCriteria = ContactCriteriaFactory.createSortByNameCriteria(ascending);
+                        break;
+                    case "emailcount":
+                    case "email_count":
+                        sortCriteria = ContactCriteriaFactory.createSortByEmailCountCriteria(ascending);
+                        break;
+                }
+
+                if (sortCriteria != null) {
+                    if (criteria == null) {
+                        criteria = sortCriteria;
+                    } else {
+                        // Apply search first, then sort
+                        List<Contact> filtered = criteria.meetCriteria(contacts);
+                        return sortCriteria.meetCriteria(filtered);
+                    }
+                }
+            }
+
+            return criteria != null ? criteria.meetCriteria(contacts) : contacts;
+        }
+
+        /**
+         * Get filtered and sorted contacts
+         */
+        public List<Contact> getFilteredContacts(String userId, String search, String sortBy, String order) {
+            Map<String, String> params = new HashMap<>();
+
+            if (search != null && !search.trim().isEmpty()) {
+                params.put("search", search);
+            }
+
+            if (sortBy != null && !sortBy.trim().isEmpty()) {
+                params.put("sortBy", sortBy);
+                params.put("order", order != null ? order : "asc");
+            }
+
+            return searchContacts(userId, params);
+        }
+
+        /**
+         * Get distinct contact names for autocomplete
+         */
+        public List<String> getContactNames(String userId, String prefix) {
+            List<Contact> contacts = getUserContacts(userId);
+
+            return contacts.stream()
+                    .map(Contact::getName)
+                    .filter(name -> prefix == null || prefix.isEmpty() ||
+                            name.toLowerCase().contains(prefix.toLowerCase()))
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+
+        /**
+         * Get distinct email addresses for autocomplete
+         */
+        public List<String> getContactEmails(String userId, String prefix) {
+            List<Contact> contacts = getUserContacts(userId);
+
+            return contacts.stream()
+                    .flatMap(contact -> contact.getEmailAddresses().stream())
+                    .filter(email -> prefix == null || prefix.isEmpty() ||
+                            email.toLowerCase().contains(prefix.toLowerCase()))
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+    }
