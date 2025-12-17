@@ -11,17 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Email Filter Service using Criteria (Filter) Design Pattern
- * This service filters emails IN-MEMORY after fetching from database
- *
- * Use this when:
- * - You need complex filter combinations
- * - Result set is small enough to fit in memory
- * - You want to demonstrate the Criteria pattern from lectures
- *
- * For large datasets, use EmailService with Specification Pattern instead
- */
 @Service
 public class EmailFilterService {
     public List<Email> searchEmails(List<Email> emails, String keyword) {
