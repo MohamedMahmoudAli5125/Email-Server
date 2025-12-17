@@ -29,27 +29,21 @@ public class AttachmentController {
             @PathVariable String attachmentId) {
 
         try {
-            // Get the attachment metadata
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email (security check)
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // CHANGED: Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Get the file bytes
             byte[] fileData = attachmentService.getAttachmentFile(attachmentId);
-
-            // Create resource from byte array
             ByteArrayResource resource = new ByteArrayResource(fileData);
 
-            // Determine content type
             String contentType = attachment.getFileType();
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }
 
-            // Build response with headers
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -68,27 +62,21 @@ public class AttachmentController {
             @PathVariable String attachmentId) {
 
         try {
-            // Get the attachment metadata
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email (security check)
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // CHANGED: Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Get the file bytes
             byte[] fileData = attachmentService.getAttachmentFile(attachmentId);
-
-            // Create resource from byte array
             ByteArrayResource resource = new ByteArrayResource(fileData);
 
-            // Determine content type
             String contentType = attachment.getFileType();
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }
 
-            // Build response with inline disposition for preview
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -100,7 +88,6 @@ public class AttachmentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-
 
     @GetMapping("/{emailId}/attachments")
     public ResponseEntity<List<Attachment>> getEmailAttachments(@PathVariable String emailId) {
@@ -120,8 +107,8 @@ public class AttachmentController {
         try {
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // CHANGED: Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -139,15 +126,15 @@ public class AttachmentController {
         try {
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // CHANGED: Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Additional check: only allow deletion for drafts
-            if (!attachment.getEmail().isDraft()) {
+            // Check if the email is a draft
+            if (attachment.getEmail() != null && !attachment.getEmail().isDraft()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .header("X-Error-Message", "Only draft attachments can be deleted")
+                        .header("X-Error-Message", "Cannot delete attachment - email is not a draft")
                         .build();
             }
 
@@ -159,14 +146,9 @@ public class AttachmentController {
         }
     }
 
-    /**
-     * Download multiple attachments as a zip (bonus feature)
-     * GET /api/emails/{emailId}/attachments/download-all
-     */
     @GetMapping("/{emailId}/attachments/download-all")
     public ResponseEntity<Resource> downloadAllAttachments(@PathVariable String emailId) {
         try {
-            // Get all attachments for the email
             List<Attachment> attachments = attachmentService.getEmailAttachments(emailId);
 
             if (attachments.isEmpty()) {
@@ -175,20 +157,6 @@ public class AttachmentController {
                         .build();
             }
 
-            // If only one attachment, download it directly
-//            if (attachments.size() == 1) {
-//                Attachment attachment = attachments.get(0);
-//                byte[] fileData = attachmentService.getAttachmentFile(attachment.getId());
-//                ByteArrayResource resource = new ByteArrayResource(fileData);
-//
-//                return ResponseEntity.ok()
-//                        .contentType(MediaType.parseMediaType(attachment.getFileType()))
-//                        .header(HttpHeaders.CONTENT_DISPOSITION,
-//                                "attachment; filename=\"" + attachment.getFileName() + "\"")
-//                        .body(resource);
-//            }
-
-            // For multiple attachments, create a ZIP file
             byte[] zipData = attachmentService.createZipOfAttachments(emailId);
             ByteArrayResource resource = new ByteArrayResource(zipData);
 

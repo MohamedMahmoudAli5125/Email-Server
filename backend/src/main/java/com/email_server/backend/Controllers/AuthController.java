@@ -3,8 +3,7 @@ package com.email_server.backend.Controllers;
 
 import com.email_server.backend.Dto.UserDTO;
 import com.email_server.backend.Entities.User;
-import com.email_server.backend.Facade.implementations.UserAuthFacade;
-import com.email_server.backend.Facade.interfaces.IUserAuthFacade;
+import com.email_server.backend.Services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +17,10 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-//    private final UserService userService;
-private final IUserAuthFacade authFacade;
+    private final UserService userService;
 
-    public AuthController(IUserAuthFacade authFacade) {
-//        this.userService = userService;
-        this.authFacade = authFacade;
+    public AuthController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping("/signup")
@@ -38,9 +35,7 @@ private final IUserAuthFacade authFacade;
         }
 
         try {
-//            User user = userService.signup(userDTO);
-            User user = authFacade.registerNewUser(userDTO);
-
+            User user = userService.signup(userDTO);
             // Return only necessary fields
             UserDTO response = new UserDTO(user);
 
@@ -61,8 +56,7 @@ private final IUserAuthFacade authFacade;
                         .body(Map.of("error", "Email and password are required"));
             }
 
-//            User user = userService.login(email, password);
-            User user = authFacade.authenticateUser(email, password);
+            User user = userService.login(email, password);
 
             // Return user info without password
             UserDTO response = new UserDTO(user);
@@ -80,8 +74,7 @@ private final IUserAuthFacade authFacade;
     @GetMapping("/profile/{userId}")
     public ResponseEntity<?> getProfile(@PathVariable String userId) {
         try {
-//            User user = userService.getUserById(userId);
-            User user = authFacade.getUserProfile(userId);
+            User user = userService.getUserById(userId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
@@ -115,8 +108,7 @@ private final IUserAuthFacade authFacade;
             }
             // Email cannot be updated, so ignore if provided
 
-//            User user = userService.updateUser(userId, updateDTO);
-            User user = authFacade.modifyUserProfile(userId, updateDTO);
+            User user = userService.updateUser(userId, updateDTO);
 
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
@@ -135,9 +127,7 @@ private final IUserAuthFacade authFacade;
     @DeleteMapping("/profile/{userId}")
     public ResponseEntity<?> deleteAccount(@PathVariable String userId) {
         try {
-//            userService.deleteUser(userId);
-            authFacade.removeUserAccount(userId);
-
+            userService.deleteUser(userId);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Account deleted successfully"
