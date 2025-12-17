@@ -19,9 +19,9 @@ export class EmailService {
     private auth: AuthService
   ) {}
 
-  getEmails(folderId: string, page: number = 0,size:number=10): Observable<any> {
-    return this.http.get(`${this.apiUrl}/folder/${folderId}?page=${page}&size=10`);
-  }
+  getEmails(folderId: string, page: number = 0, size: number = 10): Observable<any> {
+  return this.http.get(`${this.apiUrl}/folder/${folderId}?page=${page}&size=${size}`);
+}
 
   getEmail(id: string): Observable<Email> {
     return this.http.get<Email>(`${this.apiUrl}/${id}`);
@@ -62,10 +62,6 @@ markAsUnread(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}?userId=${userId}`);
   }
 
-  deleteEmailPermanent1(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}/permanent`);
-  }
-
   bulkDelete(ids: string[]): Observable<any> {
     const userId = this.auth.getUserId();
     return this.http.delete(`${this.apiUrl}/bulk`, { body: { emailIds: ids, userId } });
@@ -78,5 +74,42 @@ markAsUnread(id: string): Observable<any> {
   search(folderId: string, keyword: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/folder/${folderId}/search/subject?keyword=${keyword}`);
   }
+
+
+
+// ========== NEW METHODS FOR EMAIL LIST COMPONENT ==========
+  
+  /**
+   * Permanently delete emails (used in Trash folder)
+   * @param ids Array of email IDs to delete permanently
+   */
+  deleteEmailsPermanently(ids: string[]): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/bulk/permanent`, { 
+      body: { emailIds: ids } 
+    });
+  }
+
+  /**
+   * Remove email from custom folder (doesn't delete, just removes from folder)
+   * @param emailId Email ID to remove
+   * @param folderId Folder ID to remove from
+   */
+  removeEmailFromFolder(emailId: string, folderId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${emailId}/folder/${folderId}`);
+  }
+
+  /**
+   * Restore email from trash to its original folder
+   * @param emailId Email ID to restore
+   */
+  restoreEmailFromTrash(emailId: string): Observable<any> {
+    const userId = this.auth.getUserId();
+    return this.http.put(`${this.apiUrl}/${emailId}/restore?userId=${userId}`, {});
+  }
+  getEmailsSortedByPriority(folderId: string, page: number = 0, size: number = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/folder/${folderId}/sorted-by-priority?page=${page}&size=${size}`);
+  }
+
+
   
 }
