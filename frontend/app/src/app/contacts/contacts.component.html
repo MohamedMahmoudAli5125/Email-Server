@@ -7,33 +7,158 @@
       <strong>Error:</strong>
       <p>{{ errorMessage }}</p>
     </div>
-    <button class="close-btn" (click)="errorMessage = null; ">✕</button>
+    <button class="close-btn" (click)="errorMessage = null">✕</button>
   </div>
 
   <div class="contacts-header">
     <button class="back-btn" (click)="goBack()" [disabled]="isLoading">← Back</button>
-    <h2>Contacts</h2>
-    <button 
-      class="add-btn" 
-      (click)="showAddContactForm()" 
-      *ngIf="!showAddForm && !showEditForm"
-      [disabled]="isLoading"
-    >
-      + Add Contact
-    </button>
+    <h2>Contacts ({{filteredContacts.length}})</h2>
+    <div class="header-actions">
+      <!-- Search Box -->
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+          placeholder="Search contacts..."
+          class="search-input"
+          [disabled]="isLoading"
+        />
+        <button class="search-btn" (click)="onSearch()" [disabled]="isLoading">
+          🔍
+        </button>
+        <button *ngIf="searchTerm" class="clear-search-btn" (click)="clearSearch()" [disabled]="isLoading">
+          ✕
+        </button>
+      </div>
+
+      <!-- Sort Dropdown -->
+      <div class="sort-dropdown">
+        <select [(ngModel)]="sortBy" (change)="onSearch()" [disabled]="isLoading">
+          <option value="name">Sort by Name</option>
+          <option value="emailCount">Sort by Email Count</option>
+        </select>
+        <button class="sort-order-btn" (click)="onSort()" [disabled]="isLoading" title="Toggle sort order">
+          {{ sortOrder === 'asc' ? '↓' : '↑' }}
+        </button>
+      </div>
+
+      <!-- Advanced Search Toggle -->
+      <button 
+        class="advanced-search-btn" 
+        (click)="toggleAdvancedSearch()" 
+        [disabled]="isLoading"
+        [class.active]="showAdvancedSearch"
+      >
+        Advanced Search
+      </button>
+
+      <!-- Add Contact Button -->
+      <button 
+        class="add-btn" 
+        (click)="showAddContactForm()" 
+        *ngIf="!showAddForm && !showEditForm"
+        [disabled]="isLoading"
+      >
+        + Add Contact
+      </button>
+    </div>
+  </div>
+
+  <!-- Advanced Search Form -->
+  <div *ngIf="showAdvancedSearch" class="advanced-search-form">
+    <h3>Advanced Search</h3>
+    <form [formGroup]="advancedSearchForm" (ngSubmit)="onAdvancedSearch()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="search-name">Name</label>
+          <input
+            type="text"
+            id="search-name"
+            formControlName="name"
+            placeholder="Enter name..."
+            (input)="onNameInput($event)"
+            class="form-control"
+          />
+          <div *ngIf="nameSuggestions.length > 0" class="suggestions-dropdown">
+            <div *ngFor="let name of nameSuggestions" 
+                 class="suggestion-item"
+                 (click)="selectSuggestion(name, 'name')">
+              {{ name }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="search-email">Email</label>
+          <input
+            type="email"
+            id="search-email"
+            formControlName="email"
+            placeholder="Enter email..."
+            (input)="onEmailInput($event)"
+            class="form-control"
+          />
+          <div *ngIf="emailSuggestions.length > 0" class="suggestions-dropdown">
+            <div *ngFor="let email of emailSuggestions" 
+                 class="suggestion-item"
+                 (click)="selectSuggestion(email, 'email')">
+              {{ email }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sort-by">Sort By</label>
+          <select id="sort-by" formControlName="sortBy" class="form-control">
+            <option value="name">Name</option>
+            <option value="emailCount">Email Count</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sort-order">Order</label>
+          <select id="sort-order" formControlName="order" class="form-control">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="isLoading || isSearching">
+          <span *ngIf="isSearching">Searching...</span>
+          <span *ngIf="!isSearching">Search</span>
+        </button>
+        <button type="button" class="btn-secondary" (click)="toggleAdvancedSearch()" [disabled]="isSearching">
+          Cancel
+        </button>
+      </div>
+    </form>
   </div>
 
   <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="loading-spinner">
+  <div *ngIf="isLoading || isSearching" class="loading-spinner">
     <div class="spinner"></div>
-    <p>Loading...</p>
+    <p>{{ isSearching ? 'Searching...' : 'Loading...' }}</p>
   </div>
 
-  <!-- Add/Edit Contact Form -->
+  <!-- Search Results Info -->
+  <div *ngIf="searchTerm && !isSearching" class="search-info">
+    <p>
+      Found {{filteredContacts.length}} result{{filteredContacts.length !== 1 ? 's' : ''}} 
+      for "{{searchTerm}}"
+      <button class="clear-link" (click)="clearSearch()" [disabled]="isLoading">Clear search</button>
+    </p>
+  </div>
+
+  <!-- ADD/EDIT CONTACT FORM -->
   <div class="contact-form-container" *ngIf="showAddForm || showEditForm">
     <div class="form-header">
       <h3>{{ showAddForm ? 'Add New Contact' : 'Edit Contact' }}</h3>
-      <button class="close-form-btn" (click)="closeForm()" [disabled]="isLoading" title="Close form">
+      <button class="close-form-btn" (click)="closeForm()" title="Close form">
         ✕
       </button>
     </div>
@@ -80,7 +205,7 @@
                 type="button" 
                 class="remove-email-btn"
                 (click)="removeEmailField(i)"
-                [disabled]="emailFormArray.length <= 1 || isLoading"
+                [disabled]="emailFormArray.length <= 1"
                 title="Remove this email"
               >
                 −
@@ -104,7 +229,6 @@
           type="button" 
           class="add-email-btn" 
           (click)="addEmailField()"
-          [disabled]="isLoading"
         >
           + Add Another Email
         </button>
@@ -133,17 +257,23 @@
   </div>
 
   <!-- Contacts List -->
-  <div class="contacts-list" *ngIf="!showAddForm && !showEditForm && !isLoading">
-    <div *ngIf="contacts.length === 0" class="no-contacts">
-      <p>No contacts yet. Click "Add Contact" to get started.</p>
+  <div class="contacts-list" *ngIf="!showAddForm && !showEditForm && !isLoading && !isSearching">
+    <div *ngIf="filteredContacts.length === 0" class="no-contacts">
+      <p *ngIf="searchTerm">No contacts found for "{{searchTerm}}"</p>
+      <p *ngIf="!searchTerm">No contacts yet. Click "Add Contact" to get started.</p>
     </div>
 
-    <div *ngFor="let contact of contacts" class="contact-card">
+    <div *ngFor="let contact of filteredContacts" class="contact-card">
       <div class="contact-info" (click)="showEditContactForm(contact)">
         <div class="contact-header">
           <div class="contact-name">{{ contact.name }}</div>
-          <div class="email-count">
-            {{ contact.emailAddresses.length }} email{{ contact.emailAddresses.length !== 1 ? 's' : '' }}
+          <div class="contact-meta">
+            <span class="email-count">
+              {{ contact.emailAddresses.length }} email{{ contact.emailAddresses.length !== 1 ? 's' : '' }}
+            </span>
+            <span class="sort-indicator" *ngIf="sortBy === 'emailCount'">
+              {{ sortOrder === 'asc' ? '↓' : '↑' }}
+            </span>
           </div>
         </div>
         <div class="contact-emails">

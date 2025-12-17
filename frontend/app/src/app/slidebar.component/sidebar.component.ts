@@ -44,6 +44,20 @@ export class SidebarComponent implements OnInit {
     this.cd.detectChanges();
   }
 
+  logout(): void {
+    // Clear component state
+    this.currentUser = null;
+    this.folders = [];
+    
+    // Call logout service
+    this.authService.logout();
+    
+    // Navigate to login page
+    this.router.navigate(['/login']);
+    
+    // Force UI update
+    this.cd.detectChanges();
+  }
 
   loadFolders() {
     this.folderService.getFolders().subscribe(

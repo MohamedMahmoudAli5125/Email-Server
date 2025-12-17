@@ -75,7 +75,13 @@
       (compactClick)="toggleProfile()"
       [user]="currentUser"
     ></app-profile>
-    
+      <!-- Logout Button -->
+    <div *ngIf="currentUser" class="logout-section">
+      <button (click)="logout()" class="logout-btn" title="Logout">
+        <span class="logout-icon">🚪</span>
+        <span class="logout-text">Logout</span>
+      </button>
+    </div>
     <!-- Profile Modal -->
     <div *ngIf="showProfile" class="profile-modal-overlay" (click)="closeProfile()">
       <div class="profile-modal-content" (click)="$event.stopPropagation()">

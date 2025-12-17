@@ -1,6 +1,6 @@
 // src/app/Services/contact.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable ,throwError} from 'rxjs';
 import { Contact } from '../models/contact';
 import { catchError } from 'rxjs/operators';
@@ -63,5 +63,43 @@ export class ContactService {
     }
     
     return throwError(() => new Error(errorMessage));
+  }
+
+
+  searchContacts(userId: string, searchTerm: string, sortBy: string = 'name', order: string = 'asc'): Observable<Contact[]> {
+    let params = new HttpParams();
+    if (searchTerm) params = params.set('search', searchTerm);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    params = params.set('order', order);
+
+    return this.http.get<Contact[]>(`${this.apiUrl}/user/${userId}/search`, { params });
+  }
+
+  // Advanced search
+  advancedSearch(userId: string, searchParams: any): Observable<Contact[]> {
+    let params = new HttpParams();
+    Object.keys(searchParams).forEach(key => {
+      if (searchParams[key]) {
+        params = params.set(key, searchParams[key]);
+      }
+    });
+
+    return this.http.get<Contact[]>(`${this.apiUrl}/user/${userId}/search/advanced`, { params });
+  }
+
+  // Autocomplete names
+  getContactNames(userId: string, prefix: string = ''): Observable<string[]> {
+    let params = new HttpParams();
+    if (prefix) params = params.set('prefix', prefix);
+
+    return this.http.get<string[]>(`${this.apiUrl}/user/${userId}/autocomplete/names`, { params });
+  }
+
+  // Autocomplete emails
+  getContactEmails(userId: string, prefix: string = ''): Observable<string[]> {
+    let params = new HttpParams();
+    if (prefix) params = params.set('prefix', prefix);
+
+    return this.http.get<string[]>(`${this.apiUrl}/user/${userId}/autocomplete/emails`, { params });
   }
 }
