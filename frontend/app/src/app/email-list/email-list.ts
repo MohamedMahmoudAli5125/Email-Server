@@ -20,8 +20,7 @@ export class EmailList implements OnChanges {
 
   @Input() folderType = ''
   @Input() folderId!: string;
-  @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string ; pageNumber: number }>();
-
+  @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string }>();
   @Output() openCompose = new EventEmitter<Email>()
 
   emails: Email[] = [];
@@ -29,6 +28,7 @@ export class EmailList implements OnChanges {
   currentPage = 0;
   totalPages = 0;
   totalEmails = 0;
+  sortByPriority = false;
   currentFolder!: Folder;
   
   // Search and Filter properties
@@ -104,25 +104,41 @@ export class EmailList implements OnChanges {
     this.loadEmails();
   }
 
-  loadEmails() {
-    this.loading = true;
-    this.currentFolderId = this.folderId;
-    this.isSearching = false;
-    
-    this.emailService.getEmails(this.currentFolderId, this.currentPage, 20).subscribe({
-      next: (response: any) => {
-        this.emails = response.content;
-        this.totalPages = response.totalPages || 0;
-        this.totalEmails = response.totalElements || 0;
-        this.loading = false;
-        this.cd.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error loading emails:', error);
-        this.loading = false;
-      }
-    });
-  }
+
+
+togglePrioritySort() {
+  this.sortByPriority = !this.sortByPriority;
+  this.currentPage = 0; // Reset to first page
+
+  this.loadEmails();
+}
+
+
+
+ loadEmails() {
+  this.loading = true;
+  this.currentFolderId = this.folderId;
+  this.isSearching = false;
+  console.log(this.sortByPriority);
+  const emailRequest = this.sortByPriority 
+    ? this.emailService.getEmailsSortedByPriority(this.currentFolderId, this.currentPage, 10)
+    : this.emailService.getEmails(this.currentFolderId, this.currentPage, 10);
+  
+  emailRequest.subscribe({
+    next: (response: any) => {
+      this.emails = response.content;
+      this.totalPages = response.totalPages || 0;
+      this.totalEmails = response.totalElements || 0;
+      this.loading = false;
+      this.cd.detectChanges();
+      console.log(this.emails);
+    },
+    error: (error) => {
+      console.error('Error loading emails:', error);
+      this.loading = false;
+    }
+  });
+}
 
   // Search functionality
   onSearchChange() {
@@ -241,6 +257,7 @@ export class EmailList implements OnChanges {
   }
 
   toggleIsImportant() {
+    console.log('we here you see ');
     if (this.filters.isImportant === undefined) {
       this.filters.isImportant = true;
     } else if (this.filters.isImportant === true) {
@@ -268,20 +285,16 @@ export class EmailList implements OnChanges {
       this.emailService.markRead(email.id).subscribe();
     }
   }
+  
   onEmailDoubleClick(email: Email) {
-  if (email.id) {
-    console.log(email.id,this.folderId);
-    // this.emailOpened.emit({ 
-    //   emailId: email.id, 
-    //   folderId: this.folderId ,
-    //         pageNumber: this.currentPage // Pass the page number
-
-      
-    // });
-        this.router.navigate(['/mail', this.folderId, email.id, this.currentPage]);
-
+    if (email.id) {
+      console.log(email.id,this.folderId);
+      this.emailOpened.emit({ 
+        emailId: email.id, 
+        folderId: this.folderId 
+      });
+    }
   }
-}
 
   toggleSelect(emailId: string, event: Event) {
     event.stopPropagation();
@@ -324,34 +337,132 @@ export class EmailList implements OnChanges {
     });
   }
 
+  // Check if current folder is Trash
+  isTrashFolder(): boolean {
+    return this.currentFolder && this.currentFolder.name.toUpperCase() === 'TRASH';
+  }
+
+  // Check if current folder is custom (not system folder)
+  isCustomFolder(): boolean {
+    if (!this.currentFolder) return false;
+    const systemFolders = ['INBOX', 'SENT', 'DRAFT', 'TRASH'];
+    return !systemFolders.includes(this.currentFolder.name.toUpperCase());
+  }
+
+  // Modified bulk delete to handle different folder types
   bulkDelete() {
     if (this.selectedEmails.size === 0) return;
     
-    if (confirm(`Delete ${this.selectedEmails.size} email(s)?`)) {
-      const ids = Array.from(this.selectedEmails);
-      
-      if (this.currentFolder.name === 'Trash') {
-        this.emailService.deleteEmailPermanent(ids).subscribe({
+    const ids = Array.from(this.selectedEmails);
+    
+    // If in Trash folder, permanently delete
+    if (this.isTrashFolder()) {
+      if (confirm(`Permanently delete ${this.selectedEmails.size} email(s)? This cannot be undone.`)) {
+        this.emailService.deleteEmailsPermanently(ids).subscribe({
           next: () => {
             this.selectedEmails.clear();
             this.selectAll = false;
             this.showActions = false;
             this.loadEmails();
+          },
+          error: (error) => {
+            console.error('Error permanently deleting emails:', error);
+            alert('Failed to permanently delete emails');
           }
         });
-      } else {
+      }
+    } 
+    // If in custom folder, remove from folder only
+    else if (this.isCustomFolder()) {
+      if (confirm(`Remove ${this.selectedEmails.size} email(s) from this folder?`)) {
+        this.removeFromCustomFolder(ids);
+      }
+    } 
+    // Otherwise, move to trash (soft delete)
+    else {
+      if (confirm(`Move ${this.selectedEmails.size} email(s) to trash?`)) {
         this.emailService.bulkDelete(ids).subscribe({
           next: () => {
             this.selectedEmails.clear();
             this.selectAll = false;
             this.showActions = false;
             this.loadEmails();
+          },
+          error: (error) => {
+            console.error('Error deleting emails:', error);
+            alert('Failed to delete emails');
           }
         });
       }
     }
   }
 
+  // NEW: Remove emails from custom folder
+  removeFromCustomFolder(ids: string[]) {
+    let completedRequests = 0;
+    const totalRequests = ids.length;
+    let hasError = false;
+
+    ids.forEach(emailId => {
+      this.emailService.removeEmailFromFolder(emailId, this.folderId).subscribe({
+        next: () => {
+          completedRequests++;
+          if (completedRequests === totalRequests && !hasError) {
+            this.selectedEmails.clear();
+            this.selectAll = false;
+            this.showActions = false;
+            this.loadEmails();
+          }
+        },
+        error: (error) => {
+          console.error('Error removing email from folder:', error);
+          hasError = true;
+          completedRequests++;
+          if (completedRequests === totalRequests) {
+            alert('Some emails could not be removed');
+            this.loadEmails();
+          }
+        }
+      });
+    });
+  }
+
+  // NEW: Restore emails from trash
+  bulkRestore() {
+    if (this.selectedEmails.size === 0) return;
+    
+    if (confirm(`Restore ${this.selectedEmails.size} email(s) from trash?`)) {
+      const ids = Array.from(this.selectedEmails);
+      let completedRequests = 0;
+      const totalRequests = ids.length;
+      let hasError = false;
+
+      ids.forEach(emailId => {
+        this.emailService.restoreEmailFromTrash(emailId).subscribe({
+          next: () => {
+            completedRequests++;
+            if (completedRequests === totalRequests && !hasError) {
+              this.selectedEmails.clear();
+              this.selectAll = false;
+              this.showActions = false;
+              this.loadEmails();
+            }
+          },
+          error: (error) => {
+            console.error('Error restoring email:', error);
+            hasError = true;
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              alert('Some emails could not be restored');
+              this.loadEmails();
+            }
+          }
+        });
+      });
+    }
+  }
+
+  // Modified bulk move to show only custom folders
   bulkMove(targetFolderId: string) {
     if (this.selectedEmails.size === 0 || !targetFolderId) return;
     
@@ -362,6 +473,10 @@ export class EmailList implements OnChanges {
         this.selectAll = false;
         this.showActions = false;
         this.loadEmails();
+      },
+      error: (error) => {
+        console.error('Error moving emails:', error);
+        alert('Failed to move emails');
       }
     });
   }
@@ -400,8 +515,39 @@ export class EmailList implements OnChanges {
     }
   }
 
+  // Modified to return only custom folders for move dropdown
   getAvailableFolders() {
-    return this.folderService.folders.filter(f => f.id !== this.currentFolderId);
+    const systemFolders = ['INBOX', 'SENT', 'DRAFT', 'TRASH'];
+    return this.folderService.folders.filter(f => 
+      f.id !== this.currentFolderId && 
+      !systemFolders.includes(f.name.toUpperCase())
+    );
   }
 
+  // Check if there are any custom folders available for moving
+  hasCustomFolders(): boolean {
+    return this.getAvailableFolders().length > 0;
+  }
+
+  // Get button text based on folder type
+  getDeleteButtonText(): string {
+    if (this.isTrashFolder()) {
+      return 'Delete Forever';
+    } else if (this.isCustomFolder()) {
+      return 'Remove from Folder';
+    } else {
+      return 'Delete';
+    }
+  }
+
+  // Get button tooltip based on folder type
+  getDeleteButtonTooltip(): string {
+    if (this.isTrashFolder()) {
+      return 'Permanently delete selected emails';
+    } else if (this.isCustomFolder()) {
+      return 'Remove selected emails from this folder';
+    } else {
+      return 'Move selected emails to trash';
+    }
+  }
 }
