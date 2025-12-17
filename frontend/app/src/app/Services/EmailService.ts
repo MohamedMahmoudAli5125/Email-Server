@@ -19,9 +19,9 @@ export class EmailService {
     private auth: AuthService
   ) {}
 
-  getEmails(folderId: string, page: number = 0, size: number = 10): Observable<any> {
-  return this.http.get(`${this.apiUrl}/folder/${folderId}?page=${page}&size=${size}`);
-}
+  getEmails(folderId: string, page: number = 0,size:number=10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/folder/${folderId}?page=${page}&size=10`);
+  }
 
   getEmail(id: string): Observable<Email> {
     return this.http.get<Email>(`${this.apiUrl}/${id}`);
@@ -62,6 +62,10 @@ markAsUnread(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}?userId=${userId}`);
   }
 
+  deleteEmailPermanent1(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}/permanent`);
+  }
+
   bulkDelete(ids: string[]): Observable<any> {
     const userId = this.auth.getUserId();
     return this.http.delete(`${this.apiUrl}/bulk`, { body: { emailIds: ids, userId } });
@@ -74,9 +78,7 @@ markAsUnread(id: string): Observable<any> {
   search(folderId: string, keyword: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/folder/${folderId}/search/subject?keyword=${keyword}`);
   }
-
-
-
+  
 // ========== NEW METHODS FOR EMAIL LIST COMPONENT ==========
   
   /**
@@ -111,5 +113,4 @@ markAsUnread(id: string): Observable<any> {
   }
 
 
-  
 }

@@ -228,8 +228,7 @@
         </svg>
       </button>
 
-      <!-- Move Dropdown - Only show custom folders and only when NOT in custom folder -->
-      <div class="move-dropdown" *ngIf="showActions && !isCustomFolder() && hasCustomFolders()">
+<div class="move-dropdown" *ngIf="showActions && hasCustomFolders()">
         <button class="toolbar-icon-btn" title="Move to">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
@@ -343,12 +342,27 @@
         <span class="email-preview"> - {{ email.body | slice:0:100 }}</span>
       </div>
 
+
+ <div class="email-priority">
+    <span class="priority-badge" 
+          *ngIf="email.priority"
+          [class.urgent]="email.priority.toLowerCase() === 'urgent'"
+          [class.high]="email.priority.toLowerCase() === 'high'"
+          [class.normal]="email.priority.toLowerCase() === 'normal'"
+          [class.low]="email.priority.toLowerCase() === 'low'">
+      {{ email.priority.toLowerCase() }}
+    </span>
+  </div>
+
+
+      
       <!-- Attachments indicator -->
-      <div class="email-attachment">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
-        </svg>
-      </div>
+<div class="email-attachment" *ngIf="email.attachments && email.attachments.length > 0">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+  </svg>
+  <span class="attachment-count">{{ email.attachments.length }}</span>
+</div>
 
       <!-- Date -->
       <div class="email-date">

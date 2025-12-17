@@ -342,12 +342,11 @@ togglePrioritySort() {
     return this.currentFolder && this.currentFolder.name.toUpperCase() === 'TRASH';
   }
 
-  // Check if current folder is custom (not system folder)
-  isCustomFolder(): boolean {
-    if (!this.currentFolder) return false;
-    const systemFolders = ['INBOX', 'SENT', 'DRAFT', 'TRASH'];
-    return !systemFolders.includes(this.currentFolder.name.toUpperCase());
-  }
+ isCustomFolder(): boolean {
+  if (!this.currentFolder) return false;
+  const systemFolders = ['INBOX', 'SENT', 'DRAFTS', 'TRASH'];
+  return !systemFolders.includes(this.currentFolder.name.toUpperCase());
+}
 
   // Modified bulk delete to handle different folder types
   bulkDelete() {
@@ -515,19 +514,18 @@ togglePrioritySort() {
     }
   }
 
-  // Modified to return only custom folders for move dropdown
   getAvailableFolders() {
-    const systemFolders = ['INBOX', 'SENT', 'DRAFT', 'TRASH'];
-    return this.folderService.folders.filter(f => 
-      f.id !== this.currentFolderId && 
-      !systemFolders.includes(f.name.toUpperCase())
-    );
-  }
+  const systemFolders = ['INBOX', 'SENT', 'DRAFTS', 'TRASH'];
+  return this.folderService.folders.filter(f => 
+    f.id !== this.currentFolderId && 
+    !systemFolders.includes(f.name.toUpperCase())
+  );
+}
 
   // Check if there are any custom folders available for moving
   hasCustomFolders(): boolean {
-    return this.getAvailableFolders().length > 0;
-  }
+  return this.getAvailableFolders().length > 0;
+}
 
   // Get button text based on folder type
   getDeleteButtonText(): string {
