@@ -129,7 +129,7 @@ export class ComposeBox {
   }
 
   makeMailForm(emailForm: NgForm) {
-
+// i change the line of priority
     const email: Email = {
       fromEmail: localStorage.getItem('userEmail')!,
       to: emailForm.value.to.split(',').map((x: string) => x.trim()),
@@ -137,7 +137,7 @@ export class ComposeBox {
       bcc: emailForm.value.bcc ? emailForm.value.bcc.split(',').map((x: string) => x.trim()) : [],
       subject: emailForm.value.subject,
       body: emailForm.value.body,
-      priority: this.setPriority(emailForm.value.priority),
+      priority: this.composeEmail.priority,
       attachmentFiles: this.composeEmail.attachmentFiles || [],
       id: '',
       toList: [],
