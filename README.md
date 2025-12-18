@@ -25,9 +25,9 @@
 
 ---
 
-## ⚡ Functionality Demo
+## ⚡ Functionality
 
-![App Demo](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmZ1bmd6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26tn33aiTi1jkl6H6/giphy.gif)
+![App Demo](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmUzZnZ2b2R5NGkzOTQ3N2YzZW95bW54YXd3aDN1djAxMDJhZmN6OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oz8xSwIOv5FGhZFjq/giphy.gif)
 
 ---
 
