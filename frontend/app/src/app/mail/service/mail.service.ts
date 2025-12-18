@@ -141,12 +141,21 @@ export class MailService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  sendMail(formData: FormData): Observable<Email> {
-  return this.http.post<Email>(`${this.apiUrl}/send`, formData);
-}
-draftMail(formData: FormData): Observable<Email> {
-  return this.http.post<Email>(`${this.apiUrl}/draft`, formData);
-}
+  sendMail(email: FormData): Observable<Email> {
+    return this.http.post<Email>(this.apiUrl + '/send', email);
+  }
+
+  sendDraft(email: FormData, draftId: string) {
+    return this.http.post<Email>(this.apiUrl + `/sendDraft/${encodeURI(draftId)}`, email);
+  }
+
+  updateDraft(email: FormData, draftId: string) {
+    return this.http.put<Email>(this.apiUrl + `/draft/${encodeURI(draftId)}`, email);
+  }
+
+  draftMail(email: FormData): Observable<Email> {
+    return this.http.post<Email>(this.apiUrl + '/draft', email);
+  }
 
   getEmailById(emailId: string): Observable<Email> {
     return this.http.get<Email>(`${this.apiUrl}/${emailId}`);
@@ -224,14 +233,11 @@ draftMail(formData: FormData): Observable<Email> {
 
     return this.http.delete(`${this.apiUrl}/${encodedEmailId}?userId=${encodedUserId}`)
   }  
-// new one 
-  deletePemanently(emailId: string): Observable<void> {
-  return this.http.delete<void>(`${this.apiUrl}/${emailId}/permanent`);
-}
 
-updateDraft(draftId: string, formData: FormData): Observable<Email> {
-  return this.http.put<Email>(`${this.apiUrl}/draft/${draftId}`, formData);
-}
+  deletePemanently(emailId: string) {
+    const encoded = encodeURI(emailId)
+    console.log("Deleting permanently:", encoded);
 
-  
+    return this.http.delete(`${this.apiUrl}/${encoded}/permanent`)
+  }
 }

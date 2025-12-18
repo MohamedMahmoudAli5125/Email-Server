@@ -215,6 +215,39 @@ public class EmailService {
     }
 
     @Transactional
+    public Email sendDraft(String userId, EmailDTO emailDTO, String draftId) {
+
+        Email draft = emailRepository.findById(draftId)
+                .orElseThrow(() -> new RuntimeException("Draft not found"));
+
+        draft.setFromEmail(emailDTO.getFromEmail());
+        draft.setToList(emailDTO.getTo());
+        draft.setSubject(emailDTO.getSubject());
+        draft.setBody(emailDTO.getBody());
+        draft.setPriority(
+                emailDTO.getPriority() != null ? emailDTO.getPriority() : EmailPriority.NORMAL
+        );
+        draft.setSentDate(LocalDateTime.now());
+        draft.setDeleted(false);
+
+        Folder sentFolder = folderService.getUserFolderByType(userId, FolderType.SENT);
+        draft.removeFolder(folderService.getUserFolderByType(userId, FolderType.DRAFT));
+        draft.addFolder(sentFolder);
+
+        if (emailDTO.getAttachmentFiles() != null && !emailDTO.getAttachmentFiles().isEmpty()) {
+            attachmentService.saveAttachments(emailDTO.getAttachmentFiles(), draft);
+        }
+
+        Email savedEmail = emailRepository.save(draft);
+
+        queueManager.enqueue(savedEmail);
+        processEmailQueue(savedEmail);
+
+        return savedEmail;
+    }
+
+
+    @Transactional
     public Email updateDraft(String draftId, EmailDTO emailDTO) {
         Email draft = getEmailById(draftId);
 

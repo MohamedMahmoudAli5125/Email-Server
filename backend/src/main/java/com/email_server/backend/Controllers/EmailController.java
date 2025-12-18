@@ -73,39 +73,33 @@ public class EmailController {
         return ResponseEntity.ok(draft);
     }
 
+    @PostMapping("/sendDraft/{draftId}")
+    public ResponseEntity<?> sendDraft(
+            @RequestParam String userId,
+            @ModelAttribute EmailDTO emailDTO,
+            @PathVariable String draftId) {
 
-    // Update Draft
-    @PutMapping("/draft/{draftId}")
-    public ResponseEntity<Email> updateDraft(
-            @PathVariable String draftId,
-            @RequestParam(value = "fromEmail") String fromEmail,
-            @RequestParam(value = "to", required = false) String to,
-            @RequestParam(value = "cc", required = false) String cc,
-            @RequestParam(value = "bcc", required = false) String bcc,
-            @RequestParam(value = "subject", required = false) String subject,
-            @RequestParam(value = "body", required = false) String body,
-            @RequestParam(value = "priority") String priority,
-            @RequestParam(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles,
-            @RequestParam(value = "existingAttachmentIds", required = false) String existingAttachmentIds) {
-
-        EmailDTO emailDTO = EmailDTO.builder()
-                .fromEmail(fromEmail)
-                .to(parseEmailList(to))
-                .cc(parseEmailList(cc))
-                .bcc(parseEmailList(bcc))
-                .subject(subject)
-                .body(body)
-                .priority(EmailPriority.valueOf(priority))
-                .attachmentFiles(attachmentFiles)
-                .existingAttachmentIds(existingAttachmentIds)
-                .build();
-
-        Email updatedDraft = emailService.updateDraft(draftId, emailDTO);
-        return ResponseEntity.ok(updatedDraft);
+        try {
+            Email email = emailService.sendDraft(userId, emailDTO, draftId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(email);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
 
-
+    // Update Draft
+    @PutMapping("/draft/{draftId}")
+    public ResponseEntity<?> updateDraft(
+            @PathVariable String draftId,
+            @ModelAttribute EmailDTO emailDTO) {
+        try {
+            Email updatedDraft = emailService.updateDraft(draftId, emailDTO);
+            return ResponseEntity.ok(updatedDraft);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     @PostMapping("/send")
     public ResponseEntity<Email> sendEmail(
