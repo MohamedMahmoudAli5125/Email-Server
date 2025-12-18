@@ -44,6 +44,7 @@ graph LR
     DB -- Data Persistence --> Service
 ```
 # 🚀 Key Features
+![App Demo](backend/2.png)
 
 # 💻 How to Run
 1. Database Setup
