@@ -8,6 +8,7 @@ import { EmailService } from '../Services/EmailService';
 import { EmailSearchService, EmailSearchCriteria } from '../Services/email-search.service';
 import { EmailPriority } from '../models/enums';
 import { Router } from '@angular/router';
+import { EmailStateService } from '../Services/email-state.service';
 
 @Component({
   selector: 'app-email-list',
@@ -20,7 +21,9 @@ export class EmailList implements OnChanges {
 
   @Input() folderType = ''
   @Input() folderId!: string;
-  @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string }>();
+  // @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string }>();
+    @Output() emailOpened = new EventEmitter<{ emailId: string; folderId: string ; pageNumber: number }>();
+
   @Output() openCompose = new EventEmitter<Email>()
 
   emails: Email[] = [];
@@ -72,7 +75,9 @@ export class EmailList implements OnChanges {
     private folderService: FolderService,
     private searchService: EmailSearchService,
     private router: Router,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+      private emailStateService: EmailStateService  // ADD THIS
+
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -100,11 +105,30 @@ export class EmailList implements OnChanges {
         this.currentFolder = folder;
       }
     });
+  const savedState = this.emailStateService.getState();
 
+    // this.loadEmails();
+    if (savedState.folderId === this.folderId && this.emailStateService.hasActiveState()) {
+    this.restoreState(savedState);
+  } else {
     this.loadEmails();
   }
+  }
 
+private restoreState(state: any) {
+  this.isSearching = state.isSearching;
+  this.sortByPriority = state.sortByPriority;
+  this.searchTerm = state.searchTerm;
+  this.filters = { ...state.filters };
+  this.currentPage = state.currentPage;
 
+  // Reload with the saved state
+  if (this.isSearching) {
+    this.performSearch();
+  } else {
+    this.loadEmails();
+  }
+}
 
 togglePrioritySort() {
   this.sortByPriority = !this.sortByPriority;
@@ -119,6 +143,9 @@ togglePrioritySort() {
   this.loading = true;
   this.currentFolderId = this.folderId;
   this.isSearching = false;
+    this.saveCurrentState();
+
+
   console.log(this.sortByPriority);
   const emailRequest = this.sortByPriority 
     ? this.emailService.getEmailsSortedByPriority(this.currentFolderId, this.currentPage, 10)
@@ -152,6 +179,7 @@ togglePrioritySort() {
   performSearch() {
     this.loading = true;
     this.isSearching = true;
+  this.saveCurrentState();
 
     const filterDTO = this.searchService.buildFilterDTO({
       ...this.filters,
@@ -171,7 +199,16 @@ togglePrioritySort() {
       }
     });
   }
-
+private saveCurrentState() {
+  this.emailStateService.setState({
+    isSearching: this.isSearching,
+    sortByPriority: this.sortByPriority,
+    searchTerm: this.searchTerm,
+    filters: { ...this.filters },
+    currentPage: this.currentPage,
+    folderId: this.folderId
+  });
+}
   toggleAdvancedFilter() {
     this.showAdvancedFilter = !this.showAdvancedFilter;
   }
@@ -286,15 +323,17 @@ togglePrioritySort() {
     }
   }
   
-  onEmailDoubleClick(email: Email) {
-    if (email.id) {
-      console.log(email.id,this.folderId);
-      this.emailOpened.emit({ 
-        emailId: email.id, 
-        folderId: this.folderId 
-      });
-    }
-  }
+  // onEmailDoubleClick(email: Email) {
+  //   if (email.id) {
+  //     console.log(email.id,this.folderId);
+  //     // this.emailOpened.emit({ 
+  //     //   emailId: email.id, 
+  //     //   folderId: this.folderId 
+  //     // });
+  //             this.router.navigate(['/mail', this.folderId, email.id, this.currentPage]);
+
+  //   }
+  // }
 
   toggleSelect(emailId: string, event: Event) {
     event.stopPropagation();
@@ -548,4 +587,34 @@ togglePrioritySort() {
       return 'Move selected emails to trash';
     }
   }
+
+
+
+
+  getNavigationState(): any {
+  return {
+    isSearching: this.isSearching,
+    sortByPriority: this.sortByPriority,
+    searchTerm: this.searchTerm,
+    filters: this.filters
+  };
+}
+onEmailDoubleClick(email: Email) {
+  if (email.id) {
+    console.log(email.id, this.folderId);
+    
+    // Pass the current state along with navigation
+    // this.router.navigate(
+    //   ['/mail', this.folderId, email.id, this.currentPage],
+    //   {
+    //     state: {
+    //       emailListState: this.getNavigationState(),
+    //       emailList: this.emails, // Pass current filtered/sorted emails
+    //       currentIndex: this.emails.findIndex(e => e.id === email.id)
+    //     }
+    //   }
+        this.router.navigate(['/mail', this.folderId, email.id, this.currentPage]);
+
+    
+  }}
 }

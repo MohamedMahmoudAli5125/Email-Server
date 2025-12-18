@@ -574,3 +574,52 @@ app-compose-box {
     transform: translateY(0);
   }
 }
+.filter-indicator,
+.sort-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #e8f0fe;
+  color: #1967d2;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.sort-indicator {
+  background: #fef7e0;
+  color: #f9ab00;
+}
+
+.folder-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Restore button styling */
+.restore-btn {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.restore-btn:hover {
+  background-color: #45a049 !important;
+}
+
+.restore-btn:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed;
+}
+
+/* Delete Forever button styling for Trash */
+.delete-forever-btn {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.delete-forever-btn:hover {
+  background-color: #d32f2f !important;
+}

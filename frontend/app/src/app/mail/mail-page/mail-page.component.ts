@@ -14,6 +14,8 @@ import { EmailService } from '../../Services/EmailService';
 import { SidebarComponent } from "../../slidebar.component/sidebar.component"
 import { get } from 'http';
 import { ComposeBox } from '../compose-box/compose-box';
+import { EmailStateService } from '../../Services/email-state.service';
+import { EmailSearchService } from '../../Services/email-search.service';
 
 @Component({
   selector: 'app-mail-page',
@@ -23,6 +25,8 @@ import { ComposeBox } from '../compose-box/compose-box';
   styleUrls: ['./mail-page.component.css']
 })
 export class MailPageComponent implements OnInit {
+  public emailListState: any = null;
+  public isUsingFilteredList: boolean = false;
   currentFolderName: string = '';
   loadEmailId: string = '';
   currentEmail: Email | null = null;
@@ -61,13 +65,19 @@ export class MailPageComponent implements OnInit {
   composeEmail!: Email;
   isDraft = false;
 
+private savedState: any = null;
+private isUsingSearchFilter = false;
+currentFolder: Folder | null = null;
+
   constructor(
     private mailService: MailService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
     private folderService: FolderService,
-    private emailservice: EmailService
+    private emailservice: EmailService,
+     private emailStateService: EmailStateService,  // ADD THIS
+  private searchService: EmailSearchService    
   ) {}
 
   @HostListener('document:click', ['$event'])
@@ -80,6 +90,33 @@ export class MailPageComponent implements OnInit {
   }
 
   ngOnInit() {
+     const navigation = this.router.getCurrentNavigation();
+  if (navigation?.extras.state) {
+    this.emailListState = navigation.extras.state['emailListState'];
+    
+    // If we have a filtered/sorted email list, use it
+    if (navigation.extras.state['emailList']) {
+ this.emailList = navigation.extras.state['emailList'].map((email: any) => ({
+        ...email,
+        isRead: email.read,  // ADD THIS LINE
+        to: email.to || email.toList || [],
+        cc: email.cc || [],
+        bcc: email.bcc || [],
+        attachments: email.attachments || []
+      }));
+            this.isUsingFilteredList = true;
+      this.totalEmails = this.emailList.length;
+      
+      const currentIndex = navigation.extras.state['currentIndex'];
+      if (currentIndex !== undefined) {
+        this.currentEmailIndex = currentIndex;
+        this.currentEmail = this.emailList[currentIndex];
+        if (!this.currentEmail.isRead) {
+          this.markAsRead(this.currentEmail);
+        }
+      }
+    }
+  }
     this.route.paramMap.subscribe(params => {
       this.folderId = params.get('folderId') || '';
       this.loadEmailId = params.get('emailId') || '';
@@ -88,18 +125,23 @@ export class MailPageComponent implements OnInit {
 
       if (pageNumberParam) {
         targetPage = parseInt(pageNumberParam, 10);
-      } else {
-        targetPage = 0;
-      }
+      // } else {
+      //   targetPage = 0;
+      // }
+}
       
       if (this.folderId) {
-        this.loadCurrentFolderName();
+        // this.loadCurrentFolderName();
+         this.loadCurrentFolder();
         this.loadFolders();
-        this.loadFolderEmails(targetPage);
+        // this.loadFolderEmails(targetPage);
 
-        if (this.loadEmailId) {
-          // Email will be loaded in loadFolderEmails callback
-        }
+        // if (this.loadEmailId) {
+        //   // Email will be loaded in loadFolderEmails callback
+        // }
+         if (!this.isUsingFilteredList) {
+        this.loadFolderEmails(targetPage);
+      }
       }
     });
         this.subscribeToFolderUpdates();
@@ -118,46 +160,132 @@ export class MailPageComponent implements OnInit {
       this.refreshFoldersList();
     });
   }
-    private refreshFoldersList() {
-    // Update the folders array for the move dropdown
-    this.folders = this.folderService.folders.filter(f => f.id !== this.folderId);
-    console.log('Folders refreshed:', this.folders);
-    this.cdr.detectChanges();
+private refreshFoldersList() {
+  // Update the folders array - DON'T filter here!
+  this.folders = this.folderService.folders; // ✅ CORRECT - just assign the full array
+  console.log('Folders refreshed:', this.folders);
+  this.cdr.detectChanges();
+}
+  // Add to MailPageComponent class
+
+// Check if current folder is Trash
+isTrashFolder(): boolean {
+  return !!(this.currentFolder && this.currentFolder.name.toUpperCase() === 'TRASH');
+}
+
+// Check if current folder is a custom folder
+isCustomFolder(): boolean {
+  if (!this.currentFolder) return false;
+  const systemFolders = ['INBOX', 'SENT', 'DRAFTS', 'TRASH'];
+  return !systemFolders.includes(this.currentFolder.name.toUpperCase());
+}
+
+// Should show move option? (only for system folders)
+shouldShowMoveOption(): boolean {
+  // For Trash folder, never show move (only delete forever)
+  if (this.isTrashFolder()) {
+    return false;
   }
+  
+  // For all other folders, show move if there are available folders to move to
+  return this.getAvailableFolders().length > 0;
+}
+// Check if current folder is a system folder (not custom)
+isSystemFolder(): boolean {
+  if (!this.currentFolder) return false;
+  const systemFolders = ['INBOX', 'SENT', 'DRAFTS', 'TRASH'];
+  return systemFolders.includes(this.currentFolder.name.toUpperCase());
+}
+
+// Get delete button text based on folder type
+getDeleteButtonText(): string {
+  if (this.isTrashFolder()) {
+    return 'Delete Forever';
+  } else if (this.isCustomFolder()) {
+    return 'Remove from Folder';
+  } else {
+    return 'Delete';
+  }
+}
+
+// Get delete button tooltip based on folder type
+getDeleteButtonTooltip(): string {
+  if (this.isTrashFolder()) {
+    return 'Permanently delete this email';
+  } else if (this.isCustomFolder()) {
+    return 'Remove this email from this folder';
+  } else {
+    return 'Move this email to trash';
+  }
+}
+
 
 toggleSidebar() {
   this.isSidebarCollapsed = !this.isSidebarCollapsed;
 }
-  loadCurrentFolderName() {
-    if (!this.folderId) return;
-    
-    this.folderService.getFolderByID(this.folderId).subscribe({
-      next: (folder) => {
-        this.currentFolderName = folder.name;
-      },
-      error: (error) => {
-        console.error('Error loading folder:', error);
-        this.currentFolderName = '';
-      }
-    });
+loadCurrentFolder() {
+  if (!this.folderId) return;
+  
+  this.folderService.getFolderByID(this.folderId).subscribe({
+    next: (folder) => {
+      this.currentFolder = folder;
+      this.currentFolderName = folder.name;
+    },
+    error: (error) => {
+      console.error('Error loading folder:', error);
+      this.currentFolder = null;
+      this.currentFolderName = '';
+    }
+  });
+}
+loadFolders() {
+  this.folderService.getFolders().subscribe({
+    next: (folders) => {
+      this.folders = folders; // ✅ Don't filter here either
+      this.cdr.detectChanges();
+    },
+    error: (error) => {
+      console.error('Error loading folders:', error);
+    }
+  });
+}
+  // getAvailableFolders(): Folder[] {
+  //   return this.folders.filter(folder => folder.id !== this.folderId);
+  // }
+//   getAvailableFolders(): Folder[] {
+//   if (this.isCustomFolder()) {
+//     // For custom folders, show all folders except the current one
+//     return this.folders.filter(folder => folder.id !== this.folderId);
+//   } else {
+//     // For system folders, only show custom folders as move targets
+//     const systemFolderIds = ['inbox', 'sent', 'drafts', 'trash'];
+//     return this.folders.filter(folder => 
+//       !systemFolderIds.includes(folder.id.toLowerCase()) && 
+//       folder.id !== this.folderId
+//     );
+//   }
+getAvailableFolders(): Folder[] {
+  const systemFolders = ['INBOX', 'SENT', 'DRAFTS', 'TRASH'];
+  
+  if (this.isTrashFolder()) {
+    // In Trash folder, no moving allowed
+    return [];
   }
-
-  loadFolders() {
-    this.folderService.getFolders().subscribe({
-      next: (folders) => {
-        this.folders = folders.filter(f => f.id !== this.folderId);
-                this.cdr.detectChanges();
-
-      },
-      error: (error) => {
-        console.error('Error loading folders:', error);
-      }
-    });
+  
+  if (this.isCustomFolder()) {
+    // For custom folders: ONLY show other custom folders (not system folders)
+    return this.folders.filter(f => 
+      f.id !== this.folderId && 
+      !systemFolders.includes(f.name.toUpperCase()) // ← Only custom folders
+    );
   }
-
-  getAvailableFolders(): Folder[] {
-    return this.folders.filter(folder => folder.id !== this.folderId);
-  }
+  
+  // For system folders (Inbox, Sent, Drafts): ONLY show custom folders
+  return this.folders.filter(f => 
+    !systemFolders.includes(f.name.toUpperCase()) && 
+    f.id !== this.folderId
+  );
+}
 
   onFolderSelected(folderId: string) {
     this.router.navigate(['/mail', folderId]);
@@ -165,52 +293,136 @@ toggleSidebar() {
 
   loadFolderEmails(page: number = 0, isPrevPage: boolean = false) {
     this.isError = false;
-    this.mailService.getFolderEmails(this.folderId, page, this.pageSize)
-      .subscribe({
-        next: (emailPage: EmailPage) => {
-          this.emailList = emailPage.content.map(email => ({
-            ...email,
-            to: email.to || email.toList || [],
-            cc: email.cc || [],
-            bcc: email.bcc || [],
-            attachments: email.attachments || []
-          }));
-          console.log(this.emailList)
-          
-          this.totalEmails = emailPage.totalElements;
-          this.totalPages = emailPage.totalPages;
-          this.currentPage = emailPage.number;
-          this.cdr.markForCheck();
-            console.log('Emails loaded:', this.emailList);
-            console.log('Attempting to load email ID:', this.loadEmailId);
-          if (this.emailList.length > 0) {
-          
-            if (this.loadEmailId && !isPrevPage) {
-              this.findAndLoadEmail(this.loadEmailId);
-            } else {
-              if (isPrevPage) {
-                console.log('Loading last email on previous page');
-                console.log('Email list length:', this.emailList.length-1);
-                this.loadEmailByIndex(this.emailList.length - 1);
-              } else {
-              this.loadEmailByIndex(0);
-              }
-            }
-          } else {
-            this.currentEmail = null;
-          }
-          
-          setTimeout(() => {
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Error loading emails:', error);
-          this.isError = true;
-          this.errorMessage = 'Failed to load emails. Please try again.';
-          this.cdr.markForCheck();
-        }
+      this.savedState = this.emailStateService.getState();
+  this.isUsingSearchFilter = this.emailStateService.hasActiveState() && 
+                             this.savedState.folderId === this.folderId;
+                               let emailRequest;
+if (this.isUsingSearchFilter) {
+    // Use search/filter if active
+    if (this.savedState.isSearching) {
+      console.log('Loading with search/filter:', this.savedState);
+      const filterDTO = this.searchService.buildFilterDTO({
+        ...this.savedState.filters,
+        searchKeyword: this.savedState.searchTerm
       });
+      
+      // For search, we get all results (no pagination from backend)
+      emailRequest = this.searchService.searchAndFilter(this.folderId, filterDTO);
+    } else if (this.savedState.sortByPriority) {
+      console.log('Loading with priority sort');
+      emailRequest = this.emailservice.getEmailsSortedByPriority(this.folderId, page, this.pageSize);
+    } else {
+      emailRequest = this.mailService.getFolderEmails(this.folderId, page, this.pageSize);
+    }
+  } else {
+    // Normal loading
+    emailRequest = this.mailService.getFolderEmails(this.folderId, page, this.pageSize);
+  }
+    // this.mailService.getFolderEmails(this.folderId, page, this.pageSize)
+    //   .subscribe({
+    //     next: (emailPage: EmailPage) => {
+    //       this.emailList = emailPage.content.map(email => ({
+    //         ...email,
+    //         to: email.to || email.toList || [],
+    //         cc: email.cc || [],
+    //         bcc: email.bcc || [],
+    //         attachments: email.attachments || []
+    //       }));
+    //       console.log(this.emailList)
+          
+    //       this.totalEmails = emailPage.totalElements;
+    //       this.totalPages = emailPage.totalPages;
+    //       this.currentPage = emailPage.number;
+    //       this.cdr.markForCheck();
+    //         console.log('Emails loaded:', this.emailList);
+    //         console.log('Attempting to load email ID:', this.loadEmailId);
+    //       if (this.emailList.length > 0) {
+          
+    //         if (this.loadEmailId && !isPrevPage) {
+    //           this.findAndLoadEmail(this.loadEmailId);
+    //         } else {
+    //           if (isPrevPage) {
+    //             console.log('Loading last email on previous page');
+    //             console.log('Email list length:', this.emailList.length-1);
+    //             this.loadEmailByIndex(this.emailList.length - 1);
+    //           } else {
+    //           this.loadEmailByIndex(0);
+    //           }
+    //         }
+    //       } else {
+    //         this.currentEmail = null;
+    //       }
+          
+    //       setTimeout(() => {
+    //         this.cdr.detectChanges();
+    //       });
+    //     },
+    //     error: (error) => {
+    //       console.error('Error loading emails:', error);
+    //       this.isError = true;
+    //       this.errorMessage = 'Failed to load emails. Please try again.';
+    //       this.cdr.markForCheck();
+    //     }
+    //   });
+     emailRequest.subscribe({
+    next: (response: any) => {
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response)) {
+        // Search results (array)
+        this.emailList = response.map(email => ({
+          ...email,
+          isRead:email.read,
+          to: email.to || email.toList || [],
+          cc: email.cc || [],
+          bcc: email.bcc || [],
+          attachments: email.attachments || []
+        }));
+        this.totalEmails = response.length;
+        this.totalPages = 1;
+        this.currentPage = 0;
+      } else {
+        // Paginated results (EmailPage)
+        this.emailList = response.content.map((email: any) => ({
+          ...email,
+          isRead: email.read,
+          to: email.to || email.toList || [],
+          cc: email.cc || [],
+          bcc: email.bcc || [],
+          attachments: email.attachments || []
+        }));
+        this.totalEmails = response.totalElements;
+        this.totalPages = response.totalPages;
+        this.currentPage = response.number;
+      }
+
+      console.log('Emails loaded:', this.emailList.length);
+      this.cdr.markForCheck();
+
+      if (this.emailList.length > 0) {
+        if (this.loadEmailId && !isPrevPage) {
+          this.findAndLoadEmail(this.loadEmailId);
+        } else {
+          if (isPrevPage) {
+            this.loadEmailByIndex(this.emailList.length - 1);
+          } else {
+            this.loadEmailByIndex(0);
+          }
+        }
+      } else {
+        this.currentEmail = null;
+      }
+
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      });
+    },
+    error: (error) => {
+      console.error('Error loading emails:', error);
+      this.isError = true;
+      this.errorMessage = 'Failed to load emails. Please try again.';
+      this.cdr.markForCheck();
+    }
+  });
   }
 
   private findAndLoadEmail(emailId: string) {
@@ -252,17 +464,72 @@ toggleSidebar() {
     let newIndex = this.currentEmailIndex;
     
     if (direction === 'next') {
+      // if (this.currentEmailIndex === this.emailList.length - 1 && this.currentPage < this.totalPages - 1) {
+      //   this.loadNextPage();
+      //   return;
+      // }
+      // newIndex = this.currentEmailIndex + 1;
+    //   if (this.isUsingFilteredList) {
+    //   newIndex = this.currentEmailIndex + 1;
+    //   if (newIndex >= this.emailList.length) {
+    //     this.showActionFeedback('No more emails');
+    //     return;
+    //   }
+    // } else {
+    //   // Standard pagination logic
+    //   if (this.currentEmailIndex === this.emailList.length - 1 && this.currentPage < this.totalPages - 1) {
+    //     this.loadNextPage();
+    //     return;
+    //   }
+    //   newIndex = this.currentEmailIndex + 1;
+     if (this.isUsingSearchFilter && this.savedState.isSearching) {
+      newIndex = this.currentEmailIndex + 1;
+      if (newIndex >= this.emailList.length) {
+        this.showActionFeedback('No more emails in search results');
+        return;
+      }
+    } else {
+      // Normal pagination
       if (this.currentEmailIndex === this.emailList.length - 1 && this.currentPage < this.totalPages - 1) {
         this.loadNextPage();
         return;
       }
       newIndex = this.currentEmailIndex + 1;
-    } else if (direction === 'prev') {
+    }
+    }else if (direction === 'prev') {
+      // if (this.currentEmailIndex === 0 && this.currentPage > 0) {
+      //   this.loadPrevPage();
+      //   return;
+      // }
+      // newIndex = this.currentEmailIndex - 1;
+    //     if (this.isUsingFilteredList) {
+    //   newIndex = this.currentEmailIndex - 1;
+    //   if (newIndex < 0) {
+    //     this.showActionFeedback('No previous emails');
+    //     return;
+    //   }
+    // } else {
+    //   // Standard pagination logic
+    //   if (this.currentEmailIndex === 0 && this.currentPage > 0) {
+    //     this.loadPrevPage();
+    //     return;
+    //   }
+    //   newIndex = this.currentEmailIndex - 1;
+    // }
+     if (this.isUsingSearchFilter && this.savedState.isSearching) {
+      newIndex = this.currentEmailIndex - 1;
+      if (newIndex < 0) {
+        this.showActionFeedback('No previous emails in search results');
+        return;
+      }
+    } else {
+      // Normal pagination
       if (this.currentEmailIndex === 0 && this.currentPage > 0) {
         this.loadPrevPage();
         return;
       }
       newIndex = this.currentEmailIndex - 1;
+    }
     }
     
     if (newIndex >= 0 && newIndex < this.emailList.length && newIndex !== this.currentEmailIndex) {
@@ -300,43 +567,144 @@ toggleSidebar() {
     }
   }
 
-  deleteEmail(event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
+  // deleteEmail(event?: Event) {
+  //   if (event) {
+  //     event.stopPropagation();
+  //   }
     
-    if (!this.currentEmail?.id) return;
+  //   if (!this.currentEmail?.id) return;
     
-    if (confirm('Move this email to trash?')) {
-      this.emailservice.deleteEmail(this.currentEmail.id).subscribe({
-        next: (response) => {
-          console.log('Email moved to trash - response received');
-          this.showActionFeedback('Email moved to trash');
+  //   if (confirm('Move this email to trash?')) {
+  //     this.emailservice.deleteEmail(this.currentEmail.id).subscribe({
+  //       next: (response) => {
+  //         console.log('Email moved to trash - response received');
+  //         this.showActionFeedback('Email moved to trash');
           
-          const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
-          if (index !== -1) {
-            this.emailList.splice(index, 1);
-            this.totalEmails--;
+  //         const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+  //         if (index !== -1) {
+  //           this.emailList.splice(index, 1);
+  //           this.totalEmails--;
             
-            if (this.emailList.length > 0) {
-              const newIndex = Math.min(index, this.emailList.length - 1);
-              this.loadEmailByIndex(newIndex);
+  //           if (this.emailList.length > 0) {
+  //             const newIndex = Math.min(index, this.emailList.length - 1);
+  //             this.loadEmailByIndex(newIndex);
+  //           } else {
+  //             this.currentEmail = null;
+  //           }
+  //         }
+          
+  //         // Force change detection
+  //         this.cdr.detectChanges();
+  //         console.log('Change detection triggered');
+  //       },
+  //       error: (error) => {
+  //         console.error('Error deleting email:', error);
+  //         this.showActionFeedback('Failed to delete email');
+  //       }
+  //     });
+  //   }
+  // }
+  deleteEmail(event?: Event) {
+  // if (event) {
+  //   event.stopPropagation();
+  // }
+  
+  // if (!this.currentEmail?.id) return;
+  //   let confirmMessage = '';
+  // let deleteFunction;
+  
+  // if (confirm('Move this email to trash?')) {
+  //   this.emailservice.deleteEmail(this.currentEmail.id).subscribe({
+  //     next: (response) => {
+  //       this.showActionFeedback('Email moved to trash');
+        
+  //       const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+  //       if (index !== -1) {
+  //         this.emailList.splice(index, 1);
+  //         this.totalEmails--;
+          
+  //         if (this.emailList.length > 0) {
+  //           const newIndex = Math.min(index, this.emailList.length - 1);
+  //           this.loadEmailByIndex(newIndex);
+  //         } else {
+  //           // If filtered list is empty, go back
+  //           if (this.isUsingFilteredList) {
+  //             this.router.navigate(['/home']);
+  //           } else {
+  //             this.currentEmail = null;
+  //           }
+  //         }
+  //       }
+        
+  //       this.cdr.detectChanges();
+  //     },
+  //     error: (error) => {
+  //       console.error('Error deleting email:', error);
+  //       this.showActionFeedback('Failed to delete email');
+  //     }
+  //   });
+  // }
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  if (!this.currentEmail?.id) return;
+  
+  let confirmMessage = '';
+  let deleteFunction;
+  
+  if (this.isTrashFolder()) {
+    // Permanently delete
+    confirmMessage = 'Permanently delete this email? This action cannot be undone.';
+    deleteFunction = () => this.emailservice.deleteEmailPermanent1(this.currentEmail!.id);
+  } else if (this.isCustomFolder()) {
+    // Remove from custom folder
+    confirmMessage = 'Remove this email from this folder?';
+    deleteFunction = () => this.emailservice.removeEmailFromFolder(this.currentEmail!.id, this.folderId);
+  } else {
+    // Move to trash
+    confirmMessage = 'Move this email to trash?';
+    deleteFunction = () => this.emailservice.deleteEmail(this.currentEmail!.id);
+  }
+  
+  if (confirm(confirmMessage)) {
+    deleteFunction().subscribe({
+      next: (response) => {
+        this.showActionFeedback(
+          this.isTrashFolder() ? 'Email permanently deleted' :
+          this.isCustomFolder() ? 'Email removed from folder' :
+          'Email moved to trash'
+        );
+        
+        const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+        if (index !== -1) {
+          this.emailList.splice(index, 1);
+          this.totalEmails--;
+          
+          if (this.emailList.length > 0) {
+            const newIndex = Math.min(index, this.emailList.length - 1);
+            this.loadEmailByIndex(newIndex);
+          } else {
+            // If filtered list is empty, go back
+            if (this.isUsingFilteredList) {
+              this.router.navigate(['/home']);
             } else {
               this.currentEmail = null;
             }
           }
-          
-          // Force change detection
-          this.cdr.detectChanges();
-          console.log('Change detection triggered');
-        },
-        error: (error) => {
-          console.error('Error deleting email:', error);
-          this.showActionFeedback('Failed to delete email');
         }
-      });
-    }
+        
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error deleting email:', error);
+        this.showActionFeedback('Failed to delete email');
+      }
+    });
   }
+
+}
+
 
   permanentlyDeleteEmail(event?: Event) {
     if (event) {
@@ -447,51 +815,185 @@ toggleSidebar() {
     this.showMoveDropdown = !this.showMoveDropdown;
   }
 
-  moveEmailToFolder(targetFolderId: string, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
+  // moveEmailToFolder(targetFolderId: string, event?: Event) {
+  //   if (event) {
+  //     event.stopPropagation();
+  //   }
     
-    if (!this.currentEmail?.id || !targetFolderId) return;
+  //   if (!this.currentEmail?.id || !targetFolderId) return;
     
-    this.movingEmail = true;
+  //   this.movingEmail = true;
     
-    this.emailservice.moveEmail(this.currentEmail.id, targetFolderId).subscribe({
-      next: (response) => {
-        console.log('Email moved successfully - response received');
-        this.showActionFeedback('Email moved successfully');
-        this.showMoveDropdown = false;
-        this.movingEmail = false;
+  //   this.emailservice.moveEmail(this.currentEmail.id, targetFolderId).subscribe({
+  //     next: (response) => {
+  //       console.log('Email moved successfully - response received');
+  //       this.showActionFeedback('Email moved successfully');
+  //       this.showMoveDropdown = false;
+  //       this.movingEmail = false;
         
-        const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
-        if (index !== -1) {
-          this.emailList.splice(index, 1);
-          this.totalEmails--;
+  //       const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+  //       if (index !== -1) {
+  //         this.emailList.splice(index, 1);
+  //         this.totalEmails--;
           
-          if (this.emailList.length > 0) {
-            const newIndex = Math.min(index, this.emailList.length - 1);
-            this.loadEmailByIndex(newIndex);
-          } else {
-            this.currentEmail = null;
-          }
-        }
+  //         if (this.emailList.length > 0) {
+  //           const newIndex = Math.min(index, this.emailList.length - 1);
+  //           this.loadEmailByIndex(newIndex);
+  //         } else {
+  //           this.currentEmail = null;
+  //         }
+  //       }
         
-        // Force change detection
-        this.cdr.detectChanges();
-        console.log('Change detection triggered');
-      },
-      error: (error) => {
-        console.error('Error moving email:', error);
-        this.showActionFeedback('Failed to move email');
-        this.movingEmail = false;
-      }
-    });
-  }
+  //       // Force change detection
+  //       this.cdr.detectChanges();
+  //       console.log('Change detection triggered');
+  //     },
+  //     error: (error) => {
+  //       console.error('Error moving email:', error);
+  //       this.showActionFeedback('Failed to move email');
+  //       this.movingEmail = false;
+  //     }
+  //   });
+  // }
+// moveEmailToFolder(targetFolderId: string, event?: Event) {
+//   if (event) {
+//     event.stopPropagation();
+//   }
+  
+//   if (!this.currentEmail?.id || !targetFolderId) return;
+  
+//   this.movingEmail = true;
+  
+//   this.emailservice.moveEmail(this.currentEmail.id, targetFolderId).subscribe({
+//     next: (response) => {
+//       this.showActionFeedback('Email moved successfully');
+//       this.showMoveDropdown = false;
+//       this.movingEmail = false;
+      
+//       const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+//       if (index !== -1) {
+//         this.emailList.splice(index, 1);
+//         this.totalEmails--;
+        
+//         if (this.emailList.length > 0) {
+//           const newIndex = Math.min(index, this.emailList.length - 1);
+//           this.loadEmailByIndex(newIndex);
+//         } else {
+//           // If filtered list is empty, go back
+//           if (this.isUsingFilteredList) {
+//             this.router.navigate(['/home']);
+//           } else {
+//             this.currentEmail = null;
+//           }
+//         }
+//       }
+      
+//       this.cdr.detectChanges();
+//     },
+//     error: (error) => {
+//       console.error('Error moving email:', error);
+//       this.showActionFeedback('Failed to move email');
+//       this.movingEmail = false;
+//     }
+//   });
+// // }
+// moveEmailToFolder(targetFolderId: string, event?: Event) {
+//   if (event) {
+//     event.stopPropagation();
+//   }
+  
+//   if (!this.currentEmail?.id || !targetFolderId) return;
+  
+//   this.movingEmail = true;
+  
+//   const moveFunction = this.isCustomFolder() 
+//     ? () => this.emailservice.removeEmailFromFolder(this.currentEmail!.id, this.folderId)
+//     : () => this.emailservice.moveEmail(this.currentEmail!.id, targetFolderId);
+  
+//   moveFunction().subscribe({
+//     next: (response) => {
+//       this.showActionFeedback(
+//         this.isCustomFolder() 
+//           ? 'Email removed from folder' 
+//           : 'Email moved successfully'
+//       );
+//       this.showMoveDropdown = false;
+//       this.movingEmail = false;
+      
+//       const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+//       if (index !== -1) {
+//         this.emailList.splice(index, 1);
+//         this.totalEmails--;
+        
+//         if (this.emailList.length > 0) {
+//           const newIndex = Math.min(index, this.emailList.length - 1);
+//           this.loadEmailByIndex(newIndex);
+//         } else {
+//           // If filtered list is empty, go back
+//           if (this.isUsingFilteredList) {
+//             this.router.navigate(['/home']);
+//           } else {
+//             this.currentEmail = null;
+//           }
+//         }
+//       }
+      
+//       this.cdr.detectChanges();
+//     },
+//     error: (error) => {
+//       console.error('Error moving email:', error);
+//       this.showActionFeedback('Failed to move email');
+//       this.movingEmail = false;
+//     }
+//   });
+// }
 
   changeFolder(folderId: string) {
     this.folderId = folderId;
     this.loadFolderEmails(0);
   }
+moveEmailToFolder(targetFolderId: string, event?: Event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  if (!this.currentEmail?.id || !targetFolderId) return;
+  
+  this.movingEmail = true;
+  
+  // Always use moveEmail, not removeFromFolder
+  this.emailservice.moveEmail(this.currentEmail.id, targetFolderId).subscribe({
+    next: (response) => {
+      this.showActionFeedback('Email moved successfully');
+      this.showMoveDropdown = false;
+      this.movingEmail = false;
+      
+      // const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+      // if (index !== -1) {
+      //   this.emailList.splice(index, 1);
+      //   this.totalEmails--;
+        
+      //   if (this.emailList.length > 0) {
+      //     const newIndex = Math.min(index, this.emailList.length - 1);
+      //     this.loadEmailByIndex(newIndex);
+      //   } else {
+      //     if (this.isUsingFilteredList) {
+      //       this.router.navigate(['/home']);
+      //     } else {
+      //       this.currentEmail = null;
+      //     }
+      //   }
+      // }
+      
+      this.cdr.detectChanges();
+    },
+    error: (error) => {
+      console.error('Error moving email:', error);
+      this.showActionFeedback('Failed to move email');
+      this.movingEmail = false;
+    }
+  });
+}
 
   // Attachment methods
   downloadAttachment(attachment: Attachment) {
@@ -609,18 +1111,74 @@ toggleSidebar() {
     return priority.toLowerCase();
   }
 
-  get navigationStatus(): string {
-    const globalIndex = (this.currentPage * this.pageSize) + (this.currentEmailIndex + 1);
-    return `${globalIndex} of ${this.totalEmails}`;
+  // get navigationStatus(): string {
+  //   const globalIndex = (this.currentPage * this.pageSize) + (this.currentEmailIndex + 1);
+  //   return `${globalIndex} of ${this.totalEmails}`;
+  // }
+//   get navigationStatus(): string {
+//   const globalIndex = this.isUsingFilteredList 
+//     ? this.currentEmailIndex + 1 
+//     : (this.currentPage * this.pageSize) + (this.currentEmailIndex + 1);
+  
+//   const statusText = `${globalIndex} of ${this.totalEmails}`;
+  
+//   if (this.emailListState?.isSearching) {
+//     return `${statusText} (Filtered)`;
+//   } else if (this.emailListState?.sortByPriority) {
+//     return `${statusText} (Sorted by Priority)`;
+//   }
+  
+//   return statusText;
+// }
+get navigationStatus(): string {
+  const globalIndex = this.isUsingSearchFilter && this.savedState.isSearching
+    ? this.currentEmailIndex + 1
+    : (this.currentPage * this.pageSize) + (this.currentEmailIndex + 1);
+  
+  let statusText = `${globalIndex} of ${this.totalEmails}`;
+  
+  if (this.savedState?.isSearching) {
+    statusText += ' 🔍';
+  } else if (this.savedState?.sortByPriority) {
+    statusText += ' ⬆️';
   }
+  
+  return statusText;
+}
+  // get canGoPrev(): boolean {
+  //   return this.currentEmailIndex > 0 || this.currentPage > 0;
+  // }
 
-  get canGoPrev(): boolean {
-    return this.currentEmailIndex > 0 || this.currentPage > 0;
-  }
+  // get canGoNext(): boolean {
+  //   return this.currentEmailIndex < this.emailList.length - 1 || this.currentPage < this.totalPages - 1;
+  // }
+//   get canGoPrev(): boolean {
+//   if (this.isUsingFilteredList) {
+//     return this.currentEmailIndex > 0;
+//   }
+//   return this.currentEmailIndex > 0 || this.currentPage > 0;
+// }
 
-  get canGoNext(): boolean {
-    return this.currentEmailIndex < this.emailList.length - 1 || this.currentPage < this.totalPages - 1;
+// get canGoNext(): boolean {
+//   if (this.isUsingFilteredList) {
+//     return this.currentEmailIndex < this.emailList.length - 1;
+//   }
+//   return this.currentEmailIndex < this.emailList.length - 1 || this.currentPage < this.totalPages - 1;
+// }
+get canGoPrev(): boolean {
+  if (this.isUsingSearchFilter && this.savedState.isSearching) {
+    return this.currentEmailIndex > 0;
   }
+  return this.currentEmailIndex > 0 || this.currentPage > 0;
+}
+
+get canGoNext(): boolean {
+  if (this.isUsingSearchFilter && this.savedState.isSearching) {
+    return this.currentEmailIndex < this.emailList.length - 1;
+  }
+  return this.currentEmailIndex < this.emailList.length - 1 || this.currentPage < this.totalPages - 1;
+}
+
 
   get folderName(): string {
     return this.folderId.charAt(0).toUpperCase() + this.folderId.slice(1);
@@ -667,15 +1225,94 @@ toggleSidebar() {
   }
 navigateToHome() {
   this.router.navigate(['/home']);
+  
+}
+removeFromCustomFolder(event?: Event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  if (!this.currentEmail?.id) return;
+  
+  if (confirm('Remove this email from this folder?')) {
+    this.movingEmail = true;
+    
+    this.emailservice.removeEmailFromFolder(this.currentEmail.id, this.folderId).subscribe({
+      next: (response) => {
+        this.showActionFeedback('Email removed from folder');
+        this.movingEmail = false;
+        
+        const index = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+        if (index !== -1) {
+          this.emailList.splice(index, 1);
+          this.totalEmails--;
+          
+          if (this.emailList.length > 0) {
+            const newIndex = Math.min(index, this.emailList.length - 1);
+            this.loadEmailByIndex(newIndex);
+          } else {
+            if (this.isUsingFilteredList) {
+              this.router.navigate(['/home']);
+            } else {
+              this.currentEmail = null;
+            }
+          }
+        }
+        
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error removing email from folder:', error);
+        this.showActionFeedback('Failed to remove email from folder');
+        this.movingEmail = false;
+      }
+    });
+  }
 }
 
-
+// Add this method to restore email from trash
+restoreFromTrash(event?: Event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  if (!this.currentEmail?.id) return;
+  
+  if (confirm('Restore this email from trash?')) {
+    this.movingEmail = true;
+    
+    this.emailservice.restoreEmailFromTrash(this.currentEmail.id).subscribe({
+      next: (response) => {
+        this.showActionFeedback('Email restored from trash');
+        this.movingEmail = false;
+        
+        // Find and remove the email from current list
+        const emailIndex = this.emailList.findIndex(e => e.id === this.currentEmail?.id);
+        if (emailIndex !== -1) {
+          this.emailList.splice(emailIndex, 1);
+          this.totalEmails = Math.max(0, this.totalEmails - 1);
+          
+          if (this.emailList.length > 0) {
+            const newIndex = Math.min(emailIndex, this.emailList.length - 1);
+            this.loadEmailByIndex(newIndex);
+          } else {
+            this.currentEmail = null;
+            this.currentEmailIndex = -1;
+          }
+        }
+        
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error restoring email from trash:', error);
+        this.showActionFeedback('Failed to restore email');
+        this.movingEmail = false;
+      }
+    });
+  }
 }
 
-
-
-
-
+}
 
 
 

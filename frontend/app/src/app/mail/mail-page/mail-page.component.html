@@ -33,7 +33,12 @@
             <span class="folder-count">({{ totalEmails }} emails)</span>
           </div>
         </div>
-
+<span class="filter-indicator" *ngIf="emailListState?.isSearching">
+      🔍 Filtered
+    </span>
+    <span class="sort-indicator" *ngIf="emailListState?.sortByPriority">
+      ⬆️ Sorted
+    </span>
         <div class="toolbar-buttons">
           <span class="navigation-status">{{ navigationStatus }}</span>
           <button 
@@ -54,28 +59,51 @@
           
           <div class="separator"></div>
           
-          <button class="toolbar-btn" (click)="archiveEmail($event)" >
-            <span>📦</span>
-            <span>{{ currentEmail?.archived ? 'Unarchive' : 'Archive' }}</span>
-          </button>
-          
-          <button 
-            class="toolbar-btn" 
-            (click)="(folderId === 'trash' || currentFolderName === 'Trash') ? permanentlyDeleteEmail($event) : deleteEmail($event)">
-            <span>🗑️</span>
-            <span>Delete</span>
-          </button>
-          
+  <ng-container [ngSwitch]="true">
+    <!-- In Trash folder: Show Restore and Delete Forever -->
+    <ng-container *ngSwitchCase="isTrashFolder()">
+      <button 
+        class="toolbar-btn restore-btn"
+        (click)="restoreFromTrash($event)"
+        [disabled]="!currentEmail || movingEmail"
+        title="Restore from trash">
+        <span>↩️</span>
+        <span>Restore</span>
+      </button>
+      
+      <button 
+        class="toolbar-btn delete-forever-btn"
+        (click)="deleteEmail($event)"
+        [title]="getDeleteButtonTooltip()">
+        <span>🗑️</span>
+        <span>{{ getDeleteButtonText() }}</span>
+      </button>
+    </ng-container>
+    
+    <!-- In other folders: Show regular Delete -->
+    <ng-container *ngSwitchDefault>
+      <button 
+        class="toolbar-btn" 
+        (click)="deleteEmail($event)"
+        [title]="getDeleteButtonTooltip()">
+        <span>🗑️</span>
+        <span>{{ getDeleteButtonText() }}</span>
+      </button>
+    </ng-container>
+  </ng-container>
           <button class="toolbar-btn" (click)="markAsUnread($event)">
             <span>✉️</span>
             <span>Mark as unread</span>
           </button>
           
-          <div class="move-dropdown-wrapper">
+          <!-- Move dropdown for system folders -->
+          <div class="move-dropdown-wrapper" *ngIf="shouldShowMoveOption()">
             <button 
               class="toolbar-btn" 
               (click)="moveTo($event)"
-              [disabled]="!currentEmail || movingEmail">
+              [disabled]="!currentEmail || movingEmail || getAvailableFolders().length === 0"
+                [title]="getAvailableFolders().length === 0 ? 'No custom folders available' : 'Move to custom folder'">
+>
               <span>📁</span>
               <span>Move to</span>
               <span *ngIf="showMoveDropdown">▲</span>
@@ -85,7 +113,7 @@
             <!-- Move dropdown menu -->
             <div class="move-dropdown" *ngIf="showMoveDropdown && getAvailableFolders().length > 0">
               <div class="move-dropdown-menu">
-                <div class="move-dropdown-header">Move to folder:</div>
+                <div class="move-dropdown-header">Move to Custom Folder:</div>
                 <div 
                   *ngFor="let folder of getAvailableFolders()" 
                   class="move-dropdown-item"
@@ -100,6 +128,18 @@
                 </div>
               </div>
             </div>
+          </div>
+          
+          <!-- Remove from Folder button for custom folders -->
+          <div class="move-dropdown-wrapper" *ngIf="!shouldShowMoveOption() && !isTrashFolder()">
+            <button 
+              class="toolbar-btn" 
+              (click)="removeFromCustomFolder($event)"
+              [disabled]="!currentEmail || movingEmail"
+              title="Remove from this folder">
+              <span>📤</span>
+              <span>Remove from Folder</span>
+            </button>
           </div>
         </div>
       </div>

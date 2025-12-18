@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { Email } from '../models/email';
+import { map } from 'rxjs/operators';
 
 
 @Injectable({
@@ -20,6 +21,7 @@ export class EmailService {
   ) {}
 
   getEmails(folderId: string, page: number = 0,size:number=10): Observable<any> {
+
     return this.http.get(`${this.apiUrl}/folder/${folderId}?page=${page}&size=10`);
   }
 
