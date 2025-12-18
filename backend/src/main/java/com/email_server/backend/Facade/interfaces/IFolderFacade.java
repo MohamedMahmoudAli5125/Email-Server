@@ -1,6 +1,5 @@
 package com.email_server.backend.Facade.interfaces;
 
-
 import com.email_server.backend.Dto.FolderDTO;
 import com.email_server.backend.Entities.Folder;
 import org.springframework.http.ResponseEntity;

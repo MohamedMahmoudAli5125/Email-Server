@@ -22,21 +22,26 @@
 //        return emailFacade.filterEmailsWithCriteria(folderId, filterDTO);
 //        return emailFacade.searchAndFilterWithCriteria(folderId, filterDTO);
 //        return emailFacade.addEmailToFolder(folderId, emailDTO);
-
 package com.email_server.backend.Facade.implementations;
+
 import com.email_server.backend.Dto.EmailDTO;
 import com.email_server.backend.Dto.EmailFilterDTO;
 import com.email_server.backend.Entities.Email;
 import com.email_server.backend.Facade.interfaces.IEmailFacade;
 import com.email_server.backend.Services.EmailService;
+import com.email_server.backend.enums.EmailPriority;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class EmailFacade implements IEmailFacade {
@@ -47,26 +52,46 @@ public class EmailFacade implements IEmailFacade {
         this.emailService = emailService;
     }
 
-    @Override
-    @Transactional
-    public ResponseEntity<?> sendEmail(String userId, EmailDTO emailDTO) {
-        System.out.println("...");
-        try {
-            Email email = emailService.sendEmail(userId, emailDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(email);
-        } catch (Exception e) {
-            System.out.println("....");
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    private List<String> parseEmailList(String emailString) {
+        if (emailString == null || emailString.trim().isEmpty()) {
+            return new ArrayList<>();
         }
+        return Arrays.stream(emailString.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public ResponseEntity<?> saveDraft(String userId, EmailDTO emailDTO) {
+    public ResponseEntity<Email> saveDraft(
+            String userId, String fromEmail, String to, String cc, String bcc,
+            String subject, String body, String priority,
+            List<MultipartFile> attachmentFiles,
+            String existingAttachmentIds) {
+
+        EmailDTO emailDTO = EmailDTO.builder()
+                .fromEmail(fromEmail)
+                .to(parseEmailList(to))
+                .cc(parseEmailList(cc))
+                .bcc(parseEmailList(bcc))
+                .subject(subject)
+                .body(body)
+                .priority(EmailPriority.valueOf(priority))
+                .attachmentFiles(attachmentFiles)
+                .existingAttachmentIds(existingAttachmentIds)
+                .build();
+
+        Email draft = emailService.saveDraft(userId, emailDTO);
+        return ResponseEntity.ok(draft);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> sendDraft(String userId, EmailDTO emailDTO, String draftId) {
         try {
-            Email draft = emailService.saveDraft(userId, emailDTO);
-            System.out.println("drafted");
-            return ResponseEntity.status(HttpStatus.CREATED).body(draft);
+            Email email = emailService.sendDraft(userId, emailDTO, draftId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(email);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -76,11 +101,35 @@ public class EmailFacade implements IEmailFacade {
     @Transactional
     public ResponseEntity<?> updateDraft(String draftId, EmailDTO emailDTO) {
         try {
-            Email draft = emailService.updateDraft(draftId, emailDTO);
-            return ResponseEntity.ok(draft);
+            Email updatedDraft = emailService.updateDraft(draftId, emailDTO);
+            return ResponseEntity.ok(updatedDraft);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<Email> sendEmail(
+            String userId, String fromEmail, String to, String cc, String bcc,
+            String subject, String body, String priority,
+            List<MultipartFile> attachmentFiles,
+            String existingAttachmentIds) {
+
+        EmailDTO emailDTO = EmailDTO.builder()
+                .fromEmail(fromEmail)
+                .to(parseEmailList(to))
+                .cc(parseEmailList(cc))
+                .bcc(parseEmailList(bcc))
+                .subject(subject)
+                .body(body)
+                .priority(EmailPriority.valueOf(priority))
+                .attachmentFiles(attachmentFiles)
+                .existingAttachmentIds(existingAttachmentIds)
+                .build();
+
+        Email sent = emailService.sendEmail(userId, emailDTO);
+        return ResponseEntity.ok(sent);
     }
 
     @Override
@@ -92,7 +141,6 @@ public class EmailFacade implements IEmailFacade {
     @Override
     public ResponseEntity<?> getEmailById(String emailId) {
         try {
-            System.out.println(emailId);
             Email email = emailService.getEmailById(emailId);
             return ResponseEntity.ok(email);
         } catch (Exception e) {
@@ -134,6 +182,17 @@ public class EmailFacade implements IEmailFacade {
 
     @Override
     @Transactional
+    public ResponseEntity<?> removeFromFolder(String emailId, String folderId) {
+        try {
+            emailService.removeFromCustomFolder(emailId, folderId);
+            return ResponseEntity.ok(Map.of("message", "Email removed from folder"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @Override
+    @Transactional
     public ResponseEntity<?> moveEmails(Map<String, Object> request) {
         try {
             @SuppressWarnings("unchecked")
@@ -151,11 +210,20 @@ public class EmailFacade implements IEmailFacade {
     @Transactional
     public ResponseEntity<?> deleteEmail(String emailId, String userId) {
         try {
-            System.out.println("-----------------");
             emailService.deleteEmail(emailId, userId);
             return ResponseEntity.ok(Map.of("message", "Email moved to trash"));
         } catch (Exception e) {
-            System.out.println("....");
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> restoreFromTrash(String emailId, String userId) {
+        try {
+            emailService.restoreFromTrash(emailId, userId);
+            return ResponseEntity.ok(Map.of("message", "Email restored from trash"));
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -164,7 +232,6 @@ public class EmailFacade implements IEmailFacade {
     @Transactional
     public ResponseEntity<?> deletePermanently(String emailId) {
         try {
-            System.out.println("DDD");
             emailService.deletePermanently(emailId);
             return ResponseEntity.ok(Map.of("message", "Email deleted permanently"));
         } catch (Exception e) {
@@ -182,6 +249,20 @@ public class EmailFacade implements IEmailFacade {
 
             emailService.deleteMultipleEmails(emailIds, userId);
             return ResponseEntity.ok(Map.of("message", "Emails deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> deleteMultipleEmailsPermanently(Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<String> emailIds = (List<String>) request.get("emailIds");
+
+            emailService.deleteMultipleEmailsPermanently(emailIds);
+            return ResponseEntity.ok(Map.of("message", "Emails deleted permanently"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -226,5 +307,12 @@ public class EmailFacade implements IEmailFacade {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @Override
+    public ResponseEntity<Page<Email>> getFolderEmailsSortedByPriority(
+            String folderId, int page, int size) {
+        Page<Email> emails = emailService.getFolderEmailsSortedByPriority(folderId, page, size);
+        return ResponseEntity.ok(emails);
     }
 }

@@ -37,27 +37,21 @@ public class AttachmentFacade implements IAttachmentFacade {
     @Override
     public ResponseEntity<Resource> downloadAttachment(String emailId, String attachmentId) {
         try {
-            // Get the attachment metadata
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email (security check)
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Get the file bytes
             byte[] fileData = attachmentService.getAttachmentFile(attachmentId);
-
-            // Create resource from byte array
             ByteArrayResource resource = new ByteArrayResource(fileData);
 
-            // Determine content type
             String contentType = attachment.getFileType();
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }
 
-            // Build response with headers
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -73,27 +67,21 @@ public class AttachmentFacade implements IAttachmentFacade {
     @Override
     public ResponseEntity<Resource> previewAttachment(String emailId, String attachmentId) {
         try {
-            // Get the attachment metadata
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email (security check)
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Get the file bytes
             byte[] fileData = attachmentService.getAttachmentFile(attachmentId);
-
-            // Create resource from byte array
             ByteArrayResource resource = new ByteArrayResource(fileData);
 
-            // Determine content type
             String contentType = attachment.getFileType();
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }
 
-            // Build response with inline disposition for preview
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -121,8 +109,8 @@ public class AttachmentFacade implements IAttachmentFacade {
         try {
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -137,15 +125,15 @@ public class AttachmentFacade implements IAttachmentFacade {
         try {
             Attachment attachment = attachmentService.getAttachment(attachmentId);
 
-            // Verify attachment belongs to the email
-            if (!attachment.getEmail().getId().equals(emailId)) {
+            // Check if attachment belongs to this email (Many-to-One)
+            if (attachment.getEmail() == null || !attachment.getEmail().getId().equals(emailId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Additional check: only allow deletion for drafts
-            if (!attachment.getEmail().isDraft()) {
+            // Check if the email is a draft
+            if (attachment.getEmail() != null && !attachment.getEmail().isDraft()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .header("X-Error-Message", "Only draft attachments can be deleted")
+                        .header("X-Error-Message", "Cannot delete attachment - email is not a draft")
                         .build();
             }
 
@@ -160,7 +148,6 @@ public class AttachmentFacade implements IAttachmentFacade {
     @Override
     public ResponseEntity<Resource> downloadAllAttachments(String emailId) {
         try {
-            // Get all attachments for the email
             List<Attachment> attachments = attachmentService.getEmailAttachments(emailId);
 
             if (attachments.isEmpty()) {
@@ -169,7 +156,6 @@ public class AttachmentFacade implements IAttachmentFacade {
                         .build();
             }
 
-            // For multiple attachments, create a ZIP file
             byte[] zipData = attachmentService.createZipOfAttachments(emailId);
             ByteArrayResource resource = new ByteArrayResource(zipData);
 

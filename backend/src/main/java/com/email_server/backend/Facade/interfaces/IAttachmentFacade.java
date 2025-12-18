@@ -1,10 +1,10 @@
 package com.email_server.backend.Facade.interfaces;
+
 import com.email_server.backend.Entities.Attachment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.Map;
 
 public interface IAttachmentFacade {
 

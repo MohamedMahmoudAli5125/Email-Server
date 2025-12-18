@@ -1,8 +1,8 @@
 package com.email_server.backend.Controllers;
+import com.email_server.backend.Facade.interfaces.IFolderFacade;
 
 import java.util.List;
 import java.util.Map;
-
 import com.email_server.backend.Dto.FolderDTO;
 import com.email_server.backend.Entities.Folder;
 import com.email_server.backend.Services.FolderService;
@@ -24,63 +24,84 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/folders")
 @CrossOrigin(origins = "*")
 public class FolderController {
-    
-    private final FolderService folderService;
-    
-    public FolderController(FolderService folderService) {
-        this.folderService = folderService;
+
+//    private final FolderService folderService;
+//
+//    public FolderController(FolderService folderService) {
+//        this.folderService = folderService;
+//    }
+
+    private final IFolderFacade folderFacade;
+
+    public FolderController(IFolderFacade folderFacade) {
+        this.folderFacade = folderFacade;
     }
+
     // get all folders of user to know to know ids of its folder this make after login
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Folder>> getUserFolders(@PathVariable String userId) {
-        List<Folder> folders = folderService.getUserFolders(userId);
-        return ResponseEntity.ok(folders);
+//        List<Folder> folders = folderService.getUserFolders(userId);
+//        return ResponseEntity.ok(folders);
+        return folderFacade.getUserFolders(userId);
+
     }
-    // this get to just one folder information we not use it 
+
+    // this get to just one folder information we not use it
     @GetMapping("/{folderId}")
     public ResponseEntity<?> getFolderById(@PathVariable String folderId) {
-        try {
-            Folder folder = folderService.getFolderById(folderId);
-            return ResponseEntity.ok(folder);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+//        try {
+//            Folder folder = folderService.getFolderById(folderId);
+//            return ResponseEntity.ok(folder);
+//        } catch (Exception e) {
+//            return ResponseEntity.notFound().build();
+//        }
+        return folderFacade.getFolderById(folderId);
+
     }
-    // create custom folder for user 
+
+    // create custom folder for user
     @PostMapping("/user/{userId}")
     public ResponseEntity<?> createFolder(@PathVariable String userId,
-                                        @RequestBody FolderDTO folderDTO) {
-        try {
-            Folder folder = folderService.createCustomFolder(userId, folderDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(folder);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+                                          @RequestBody FolderDTO folderDTO) {
+//        try {
+//            Folder folder = folderService.createCustomFolder(userId, folderDTO);
+//            return ResponseEntity.status(HttpStatus.CREATED).body(folder);
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//        }
+        return folderFacade.createFolder(userId, folderDTO);
+
     }
 
     // update the custom folder first give me its id this can be bonus 
     // this map like the json  
     // i make it json
-    
+
     @PutMapping("/{folderId}/rename")
     public ResponseEntity<?> renameFolder(@PathVariable String folderId,
-                                         @RequestBody FolderDTO request) {
-        try {
-            // String newName = request.get("newName");
-            Folder folder = folderService.renameFolder(folderId, request.getName());
-            return ResponseEntity.ok(folder);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+                                          @RequestBody FolderDTO request) {
+//        try {
+//            // String newName = request.get("newName");
+//            Folder folder = folderService.renameFolder(folderId, request.getName());
+//            return ResponseEntity.ok(folder);
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//        }
+        return folderFacade.renameFolder(folderId, request);
+
     }
-    // to delete any custom folder 
+
+    // to delete any custom folder
     @DeleteMapping("/{folderId}")
     public ResponseEntity<?> deleteFolder(@PathVariable String folderId) {
-        try {
-            folderService.deleteFolder(folderId);
-            return ResponseEntity.ok(Map.of("message", "Folder deleted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+//        try {
+//            folderService.deleteFolder(folderId);
+//            return ResponseEntity.ok(Map.of("message", "Folder deleted successfully"));
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//        }
+//    }
+        return folderFacade.deleteFolder(folderId);
+
     }
 }
